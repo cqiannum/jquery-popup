@@ -67,10 +67,10 @@ module.exports = function(grunt) {
         jsbeautifier: {
             files: ["Gruntfile.js", "src/**/*.js"],
             options: {
-                "indent_size": 4,
-                "indent_char": " ",
-                "indent_level": 0,
-                "indent_with_tabs": false,
+                // "indent_size": 4,
+                // "indent_char": " ",
+                // "indent_level": 0,
+                "indent_with_tabs": true,
                 "preserve_newlines": true,
                 "max_preserve_newlines": 10,
                 "jslint_happy": false,

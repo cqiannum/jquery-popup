@@ -36,6 +36,9 @@
 
             trigger: function(type) {
 
+            },
+            loadfail: function(type) { // error process, image ajax iframe vhtml5
+
             }
 
         };
@@ -130,12 +133,13 @@
         sliderSetting: {},
 
         tpl: {
-            wrap: "",
-            image: "",
-            iframe: "",
-            error: "",
-            next: "",
-            prev: ""
+            wrap: '<div class="popup-overlay"><div class="popup-container"><div class="popup-content" ><div class="popup-content-inner"></div></div><div class="popup-info"></div><div class="popup-controls"></div></div></div>',
+            image: '<img class="popup-image" src="{href}" alt="" />',
+            iframe: '<iframe id="popup-frame{rnd}" name="popup-frame{rnd}" class="popup-iframe" frameborder="0" vspace="0" hspace="0"' + ($.browser.msie ? ' allowtransparency="true"' : '') + '></iframe>',
+            error: '<p class="popup-error">The requested content cannot be loaded.<br/>Please try again later.</p>',
+            closeBtn: '<a title="Close" class="popup-controls-close" href="javascript:;"></a>',
+            next: '<a title="Next" class="popup-controls-next" href="javascript:;"><span></span></a>',
+            prev: '<a title="Previous" class="popup-controls-prev" href="javascript:;"><span></span></a>'
         }
     };
 
@@ -143,7 +147,7 @@
 
     // Plugin constructor
     var Popup = $.Popup = function(data, options) {
-        var settings, dataPool;
+        var dataPool;
 
         var self = this;
 
@@ -167,7 +171,12 @@
         this.type = '';
         this.url = '';
 
-        this.elems = null; //this value will be null,if the popup content is outside the page      
+        //this value will be null,if the popup content is outside the page  
+        this.elems = null;     
+        this.target = null;
+
+        this.current = null;
+        this.coming = null;
 
         function init() {
             dataPool.skin = options.skin || 'default';
@@ -224,14 +233,16 @@
         constructor: Popup,
         _beforeshow: function() {
             var self = this,
+                current = this.current,
                 dataPool = this.dataPool,
-                comps = dataPool.components;
+                comps = dataPool.components,
+                tpl = self.current.tpl;
+
             //show overlay and container from tpl...
+            $(tpl.wrap).appendTo($('body')).addClass(dataPool.skin).css({display: 'none'});
 
             // transtions
-            //       ...
-            //       ...
-            // transtions
+            transtions[current.transition]('openEffect');
 
             //show componnets
             $.each(comps, function(i, v) {
@@ -257,11 +268,6 @@
                 this._beforeshow();
             } else {
 
-                // sliderEffect
-                //        ...
-                //        ...
-                // sliderEffect
-
                 Util.trigger('change.popup');
             }
 
@@ -271,13 +277,21 @@
             var comps = this.dataPool.components;
 
             types[this.type].load(this);
+
             //load componnets content
             $.each(comps, function(i, v) {
-                components[v.name].load();
+                components[v.name].load && components[v.name].load();
             });
         },
         _afterLoad: function() {
+
+            this._hideLoading();
+
             Util.trigger('afterLoad.popup');
+
+            // sliderEffect
+            sliderEffects[this.current.sliderEffect].init();
+            
         },
         next: function() {
             var index = this.index;
@@ -296,7 +310,10 @@
             this.show(index);
         },
         close: function() {
+            var current = this.current;
             this.isOpened = false;
+
+            transtions[current.transition].closeEffect();
 
             Util.trigger('close');
 
@@ -306,6 +323,10 @@
         destory: function() {
             this.initialized = false;
         },
+
+        _hideLoading: function() {},
+
+        _showLoading: function() {},
 
         addComponent: function(name, options) { //add component which is registered to current instance 
             var component = {};
@@ -1237,18 +1258,18 @@
             match: function(url) {
                 return url.match(/\.(png|PNG|jpg|JPG|jpeg|JPEG|gif|GIF)$/i);
             },
-            load: function() {
-                var img = Popup.photo = new Image();
+            load: function(instance) {
+                var img  = new Image();
 
                 img.onload = function() {
-                    var width = img.width,
-                        height = img.height,
-                        $inner = $('<div>');
+                    var width = this.width,
+                        height = this.height;
+
                     this.onload = this.onerror = null;
 
-                    Popup.current.width = width;
-                    Popup.current.height = height;
-                    Popup.current.aspect = width / height;
+                    instance.current.image.width = width;
+                    instance.current.image.height = height;
+                    instance.current.image.aspect = width / height;
 
                     //for centering image
                     if (!Popup.current.autoSize) {
@@ -1270,35 +1291,25 @@
                         });
                     }
 
-                    $inner.addClass('popup-content-inner').css({
-                        width: '100%',
-                        height: '100%',
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        zIndex: 1,
-                    }).append(img);
+                    instance.current.content = img;
 
-                    Popup.current.content = $inner;
-
-                    Popup._hideLoading();
-                    Popup._afterLoad();
+                    instance._afterLoad();
                 };
 
                 img.onerror = function() {
                     this.onload = this.onerror = null;
 
-                    Popup._loadfail('image');
-
-                    return "can't find Image !";
+                    instance.current.content = Util.loadfail('image');
+                    instance._afterLoad();
                 };
-                img.src = Popup.current.url;
 
                 if (img.complete === undefined || !img.complete) {
-                    Popup._showLoading();
+                    Util.showLoading();
                 }
+
+                img.src = instance.url;
             },
-            imgPreLoad: function() {
+            imgPreLoad: function(instance) {
                 var group = Popup.group,
                     count = group.length,
                     obj;
@@ -1312,7 +1323,7 @@
             match: function(url) {
                 return url.charAt(0) == "#";
             },
-            load: function() {
+            load: function(instance) {
                 var $inline = $(Popup.current.url).clone().css({
                     'display': 'block'
                 });
@@ -1690,7 +1701,6 @@
             //Popup.$content.append(Popup.current.content);
         },
     };
-
 
     //components 
     components.overlay = {
@@ -2102,40 +2112,64 @@
 
     // jQuery plugin initialization 
     $.fn.Popup = function(options) {
-        var data = [],
-            self = this;
-        Popup.elements = $(this);
+        var self = this,
+            $self = $(self);
 
         function run() {
-            var start = new Popup(data, options);
+    
+            $self.on('click', function(e) {
+                var start,index,group,
+                    data = [],
+                    config = [];
 
-            start.elems = $(this);
-            //store options on a new obj,so it will not be changed
-            $(element).on('click', function(e) {
-                start.show();
+                //filter the same popup-group name with the current click element as a group
+                group = $self.filter(function() {
+                    var data = $(this).data('popup-group');
+                    if (metas.group) {
+                        return data === metas.group;
+                    }
+                });
+
+                if (group === undefined) {
+                    group = $self;
+                }
+
+                $.each(group, function(i, el) {
+                    var source = {},
+                        metas = {};
+                    // if doesnot have src property, ignore the element
+                    if (el.href) {
+                        source.link = el.href;
+                        source.type = Util.checkType(el.src);
+                    } else {
+                        console.log('cant find link in the element');
+                    }
+                    data.push(source);
+
+                    //get user options on DOM protperties and store them on metas object
+                    $.each($(el).data(), function(k, v) {
+                        if (/^popup/i.test(k)) {
+                            metas[k.toLowerCase().replace(/^popup/i, '')] = v;
+                        }
+                    });
+                    config.push(metas);
+                });
+
+                index = group.index(group);
+                options = $.extend(true,options,config[index]);
+
+                start = new Popup(data, options);
+                start.elems = group;
+                start.target = this;
+                group.length >== 2 && start.isGroup = true;
+
+                start.show(index);
+
                 return false;
             });
+
             return start;
-        }
-
-        //get user options on DOM protperties and store them on metas object
-        $.each($self.data(), function(k, v) {
-            if (/^popup/i.test(k)) {
-                metas[k.toLowerCase().replace(/^popup/i, '')] = v;
-            }
-        });
-
-        $.each($(this), function(i, el) {
-            var source = {};
-            // if doesnot have src property, ignore the element
-            if (el.href) {
-                source.link = el.href;
-                source.type = Util.checkType(el.src);
-            } else {
-                console.log('cant find link in the element');
-            }
-            data.push(source);
-        });
+        }       
 
         return self.each(function() {
             if (!$.data(self, 'popup')) {
@@ -2145,6 +2179,7 @@
     };
 
 })(jQuery, document, window);
+
 
 //extend some little function
 
@@ -2371,8 +2406,10 @@ $.Popup.registerComponent('counter',{
             $(settings.tpl).text(current + "/" + instance.total)
         });
 
-    }
-    
+    },
+    load: function() {
+
+    }   
 });
 
 $.Popup.registerComponent('title',{
@@ -2408,5 +2445,4 @@ $.Popup.Flickr = function() {};
 $.Popup.Flickr.prototype = {
     constructor: $.Popup.Flickr,
     find: function(id) {},
-
 };

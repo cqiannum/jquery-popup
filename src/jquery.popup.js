@@ -29,7 +29,9 @@
                     return 0;
                 }
             },
-            calculate: function() {},
+            calculate: function(obj) {
+
+            },
 
             //check if the needed files have been loaded
             checkFile: function() {},
@@ -127,13 +129,16 @@
         closeBtn: true,
         winBtn: true, //click overlay to close popup
 
+        preload: false,
+
         transition: 'fade',
         transitionSetting: {},
         sliderEffect: 'fade',
         sliderSetting: {},
 
         tpl: {
-            wrap: '<div class="popup-overlay"><div class="popup-container"><div class="popup-content" ><div class="popup-content-inner"></div></div><div class="popup-info"></div><div class="popup-controls"></div></div></div>',
+            overlay: '<div class="popup-overlay"></div>',
+            container: '<div class="popup-container"><div class="popup-content" ><div class="popup-content-inner"></div></div><div class="popup-info"></div><div class="popup-controls"></div></div>',
             image: '<img class="popup-image" src="{href}" alt="" />',
             iframe: '<iframe id="popup-frame{rnd}" name="popup-frame{rnd}" class="popup-iframe" frameborder="0" vspace="0" hspace="0"' + ($.browser.msie ? ' allowtransparency="true"' : '') + '></iframe>',
             error: '<p class="popup-error">The requested content cannot be loaded.<br/>Please try again later.</p>',
@@ -249,7 +254,6 @@
                 components[v.name].onReady(self,v.options);
             });
 
-            this.isOpened = true;
             Util.trigger('beforeshow.popup');
         },
         show: function(index) {
@@ -284,14 +288,30 @@
             });
         },
         _afterLoad: function() {
+            var rez;
 
             this._hideLoading();
 
+            rez = Util.calculate(this.current);
+            Util.trigger('resize',rez);
+
+            if (this.isOpened) {
+                // sliderEffect
+                sliderEffects[this.current.sliderEffect].init(this);
+            } else {
+                //for first open
+                this.$inner.empty();
+                this.$inner.append(this.current.content);
+            }
+
             Util.trigger('afterLoad.popup');
 
-            // sliderEffect
-            sliderEffects[this.current.sliderEffect].init();
-            
+            if (this.current.preload === true) {
+
+                //todo: this excute prload function
+            }
+
+            this.isOpened = true;
         },
         next: function() {
             var index = this.index;
@@ -550,7 +570,6 @@
             //give a chance to reset some infos
             Popup._trigger('afterLoad');
 
-
             //add autoPlay 
             if (Popup.current.autoPlay === true) {
                 Popup._slider.play();
@@ -561,9 +580,7 @@
                 Popup.types.image.imgPreLoad();
             }
 
-            //reset some properties after load
-            Popup.current.type = null;
-            Popup.angle = null; //可以放在这里是因为旋转是在用户点击的时候才执行，因此在旋转期间没有执行到这里，变量不会被销毁。
+            
         },
         _slider: {
             timer: {},
@@ -593,41 +610,41 @@
             obj = {},
 
             current = Popup.current,
-                aspect = current.aspect,
+            aspect = current.aspect,
 
-                //save original image dimension,
-                originWidth = current.width,
-                originHeight = current.height,
+            //save original image dimension,
+            originWidth = current.width,
+            originHeight = current.height,
 
-                winWidth = $(window).width(),
-                winHeight = $(window).height(),
+            winWidth = $(window).width(),
+            winHeight = $(window).height(),
 
-                //here create new vars to save some current properties
-                //so we will not change the current value and can reuse it in calcultion
-                minWidth = current.minWidth,
-                minHeight = current.minHeight,
-                minTop = current.minTop,
-                minLeft = current.minLeft,
-                holderWidth = current.holderWidth,
-                holderHeight = current.holderHeight,
+            //here create new vars to save some current properties
+            //so we will not change the current value and can reuse it in calcultion
+            minWidth = current.minWidth,
+            minHeight = current.minHeight,
+            minTop = current.minTop,
+            minLeft = current.minLeft,
+            holderWidth = current.holderWidth,
+            holderHeight = current.holderHeight,
 
-                scale = function(x, y, rate) {
-                    var w, h;
-                    w = y * rate;
-                    h = x / rate;
+            scale = function(x, y, rate) {
+                var w, h;
+                w = y * rate;
+                h = x / rate;
 
-                    if (w > x) {
-                        w = x;
-                    }
-                    if (h > y) {
-                        h = y;
-                    }
+                if (w > x) {
+                    w = x;
+                }
+                if (h > y) {
+                    h = y;
+                }
 
-                    return {
-                        w: w,
-                        h: h,
-                    }
-                };
+                return {
+                    w: w,
+                    h: h,
+                }
+            };
 
             //here design for mobile
             if (Popup._resposive(winWidth)) {
@@ -652,9 +669,6 @@
             } else {
                 width = Popup.settings.width;
                 height = Popup.settings.height;
-
-                console.log(width);
-                console.log(height);
             }
 
             //centered the container

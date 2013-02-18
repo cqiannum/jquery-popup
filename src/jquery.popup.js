@@ -13,38 +13,57 @@
         HASH = window.location.hash.replace(/#\//, ''),
         pluginName = "Popup",
         $doc = $(document),
+        $win = $(window),
         toString = Object.prototype.toString;
-    var Util = (function() {
-        return {
-            checkType: function() {},
+    var Util = {
+        checkType: function() {},
 
-            // parse anything into a number
-            parseValue: function(val) {
-                if (typeof val === 'number') {
-                    return val;
-                } else if (typeof val === 'string') {
-                    var arr = val.match(/\-?\d|\./g);
-                    return arr && arr.constructor === Array ? arr.join('') * 1 : 0;
-                } else {
-                    return 0;
-                }
-            },
-            calculate: function(obj) {
+        // parse anything into a number
+        parseValue: function(val) {
+            if (typeof val === 'number') {
+                return val;
+            } else if (typeof val === 'string') {
+                var arr = val.match(/\-?\d|\./g);
+                return arr && arr.constructor === Array ? arr.join('') * 1 : 0;
+            } else {
+                return 0;
+            }
+        },
+        calculate: function(obj) {
 
-            },
+        },
 
-            //check if the needed files have been loaded
-            checkFile: function() {},
+        //check if the needed files have been loaded
+        checkFile: function() {},
 
-            trigger: function(type) {
+        trigger: function(type) {
 
-            },
-            loadfail: function(type) { // error process, image ajax iframe vhtml5
+        },
+        loadfail: function(type) { // error process, image ajax iframe vhtml5
 
+        },
+        insertStyleTag : function( styles, id ) {
+
+            if ( id && $( '#'+id ).length ) {
+                return;
             }
 
-        };
-    }());
+            var style = doc.createElement( 'style' );
+            if ( id ) {
+                style.id = id;
+            }
+
+            DOM().head.appendChild( style );
+
+            if ( style.styleSheet ) { // IE
+                style.styleSheet.cssText = styles;
+            } else {
+                var cssText = doc.createTextNode( styles );
+                style.appendChild( cssText );
+            }
+        }
+    };
+
     var event = "beforLoad,afterLoad,close,change";
     var keyboard = {
 
@@ -148,7 +167,20 @@
         }
     };
 
+    //add core css style to head 
+    (function(){
+        var css = '',
+            cssMap = {
+                overlay: 'position:fixed;display:none;opacity:'+op.overlayOpacity+';filter:alpha(opacity='+(op.overlayOpacity*100)+');top:0;left:0;width:100%;height:100%;background:'+op.overlayBackground+';z-index:99990',
+                container: 'position: absolute;',
+                close: ''
+            };
+
+    })();
+
     _nativeFullscreen.listen();
+
+
 
     // Plugin constructor
     var Popup = $.Popup = function(data, options) {
@@ -162,7 +194,7 @@
         // the flag of instance
         this.initialized = false;
         this.isGroup = null;
-        this.isOpened = false;
+        this.active = false;
         //dataPool is a database
         this.dataPool = {
             content: [], //thie could be set by plugin contains type url info 
@@ -233,6 +265,10 @@
         }
 
         init();
+
+        if (dataPool.content.length >== 2 || this.current.preload === true) {
+            this.isGroup = true;
+        }
     };
     Popup.prototype = {
         constructor: Popup,
@@ -243,8 +279,30 @@
                 comps = dataPool.components,
                 tpl = self.current.tpl;
 
+            //save DOM rel
+            this.$overlay = $(tpl.overlay);
+            this.$container = $(tpl.container);
+            this.$inner = this.$container.find('popup-content-inner');    
+
             //show overlay and container from tpl...
-            $(tpl.wrap).appendTo($('body')).addClass(dataPool.skin).css({display: 'none'});
+            this.$overlay.addClass(dataPool.skin).css({position:'fixed',display:'none',top:0,left:0,width:'100%',height:'100%',zIndex:99990});
+            this.$container.css({position:'absolute',display:'none'});
+            this.$overlay.add(this.$container)).appendTo($('body'));
+
+            //bound event
+            if (this.current.winBtn === true) {
+                $(tpl.overlay).on('click.popup',this.close);
+            }
+
+            if (this.isGroup ===true && current.keyboard ===true) {
+                keyboard.attach({
+                    escape: this.close,
+                    left: this.prev,
+                    right: this.next
+                });
+            }
+
+            $win.on('resize',this.resize);           
 
             // transtions
             transtions[current.transition]('openEffect');
@@ -268,13 +326,12 @@
             this.type = data.type;
             this.url = data.url;
 
-            if (this.isOpened === false) {
+            if (this.active === false) {
                 this._beforeshow();
-            } else {
+            } 
 
-                Util.trigger('change.popup');
-            }
-
+            Util.trigger('change.popup');
+            
             this._load();
         },
         _load: function() {
@@ -288,14 +345,10 @@
             });
         },
         _afterLoad: function() {
-            var rez;
 
             this._hideLoading();
 
-            rez = Util.calculate(this.current);
-            Util.trigger('resize',rez);
-
-            if (this.isOpened) {
+            if (this.active) {
                 // sliderEffect
                 sliderEffects[this.current.sliderEffect].init(this);
             } else {
@@ -311,7 +364,7 @@
                 //todo: this excute prload function
             }
 
-            this.isOpened = true;
+            this.active = true;
         },
         next: function() {
             var index = this.index;
@@ -331,7 +384,7 @@
         },
         close: function() {
             var current = this.current;
-            this.isOpened = false;
+            this.active = false;
 
             transtions[current.transition].closeEffect();
 
@@ -340,8 +393,31 @@
             $(this).off('.popup');
             
         },
-        destory: function() {
+        destroy: function() {
             this.initialized = false;
+        },
+        resize: function() {
+            var current = this.current,
+                buttomSpace = current.buttomSpace,
+                leftSpace = current.leftSpace,
+                boxWidth = this.$container.outerWidth(),
+                boxHeight = this.$container.outerHeight();
+
+            //calculate
+            var width = Math.min( $win.width()-buttomSpace, boxWidth ),
+                height = Math.min( $win.height()-leftSpace, boxHeight ),
+                ratio = Math.min( width / boxWidth, height / boxHeight ),
+                destWidth = Math.round( boxWidth * ratio ),
+                destHeight = Math.round( boxHeight * ratio ),
+                to = {
+                    width: destWidth,
+                    height: destHeight,
+                    'margin-top': Math.ceil( destHeight / 2 ) *- 1 - buttomSpace,
+                    'margin-left': Math.ceil( destWidth / 2 ) *- 1 + leftSpace
+                };
+            
+            this.$container.css( to );
+
         },
 
         _hideLoading: function() {},
@@ -1147,7 +1223,6 @@
 
 
         //open api
-
     });
 
     //static method for the page

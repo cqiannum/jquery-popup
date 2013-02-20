@@ -1,0 +1,60 @@
+.skinRimless.popup-overlay {
+  cursor: pointer;
+  background: none repeat scroll 0 0 rgba(0, 0, 0, 0.9);
+}
+
+.skinRimless.popup-container {
+  position: absolute;
+}
+
+.skinRimless.popup-container .popup-content {
+  overflow: hidden;
+  background-color: white;
+  border-radius: 5px;
+}
+
+.skinRimless.popup-container .popup-controls-prev {
+  position: absolute;
+  top: 50%;
+  left: -30%;
+  width: 30px;
+  height: 30px;
+  margin-top: -15px;
+  text-indent: -9999px;
+  background: url(../img/buttom-prev-normal.png) no-repeat scroll 0 0 transparent;
+}
+
+.skinRimless.popup-container .popup-controls-prev:hover {
+  background: url(../img/buttom-prev-hover.png) no-repeat scroll 0 0;
+}
+
+.skinRimless.popup-container .popup-controls-next {
+  position: absolute;
+  top: 50%;
+  right: -30%;
+  width: 30px;
+  height: 30px;
+  margin-top: -15px;
+  text-indent: -9999px;
+  background: url(../img/buttom-next-normal.png) no-repeat scroll 0 0 transparent;
+}
+
+.skinRimless.popup-container .popup-controls-next:hover {
+  background: url(../img/buttom-next-hover.png) no-repeat scroll 0 0;
+}
+
+.skinRimless.popup-container .popup-controls-close {
+  position: absolute;
+  top: -15px;
+  right: -15px;
+  display: block;
+  width: 30px;
+  height: 30px;
+  text-indent: -9999px;
+  background: url(../img/buttom-close-normal.png) no-repeat 0 0;
+  opacity: 0.7;
+}
+
+.skinRimless.popup-container .popup-controls-close:hover {
+  opacity: 1;
+}

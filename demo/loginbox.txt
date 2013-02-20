@@ -1,0 +1,17 @@
+<div id="ajax" style="max-width:700px;">
+
+<style
+<div style="text-align:right;">
+<form id="loginform" autocomplete="off" method="post" action="ajax_login.php">
+<label>
+<em>Username : </em>
+<input id="username" class="input" type="text" name="username">
+</label>
+<label>
+<em>Password : </em>
+<input id="password" class="input" type="password" name="password">
+</label>
+<input id="submit" class="button alignright" type="submit" style="margin:0" value="Login" name="submit">
+</form>
+</div>
+</div>

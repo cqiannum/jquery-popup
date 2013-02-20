@@ -84,9 +84,17 @@ module.exports = function(grunt) {
             }
         },
         recess: {
-            dist: {
-                src: ['src/main.less'],
-                dest: 'dist/main.css',
+            core: {
+                src: ["less/**/*.less"],
+                dest: 'css/popup.css',
+                options: {
+                    compile: true
+                }
+            },
+            
+            skin_skinRimless: {
+                src: ["skins/skinRimless/**/*.less"],
+                dest: 'demo/css/skinRimless.css',
                 options: {
                     compile: true
                 }
@@ -108,4 +116,6 @@ module.exports = function(grunt) {
     grunt.registerTask('default', ['jshint', 'jsbeautifier', 'clean', 'concat', 'uglify']);
 
     grunt.registerTask('js', ['jshint', 'jsbeautifier']);
+
+    grunt.registerTask('css', ['recess']);
 };

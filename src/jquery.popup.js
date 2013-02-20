@@ -12,11 +12,38 @@
     var NAV = navigator.userAgent.toLowerCase(),
         HASH = window.location.hash.replace(/#\//, ''),
         pluginName = "Popup",
+        doc = window.document,
         $doc = $(document),
         $win = $(window),
         toString = Object.prototype.toString;
+    var IE = (function() {
+        var v = 3,
+            div = window.document.createElement( 'div' ),
+            all = div.getElementsByTagName( 'i' );
+
+        do {
+            div.innerHTML = '<!--[if gt IE ' + (++v) + ']><i></i><![endif]-->';
+        } while ( all[0] );
+        return v > 4 ? v : undefined;
+    }() );
     var Util = {
-        checkType: function() {},
+        checkType: function(url) {
+            var result = '',
+                type = ['image','iframe','ajax','inline','vhtml5'];
+
+            $.each(type,function(i,v) {
+
+                if (types[v].match) {
+                    
+                    if (types[v].match(url)) {
+                        result = v;
+                        return ;
+                    }
+                }
+            });
+
+            return result;
+        },
 
         // parse anything into a number
         parseValue: function(val) {
@@ -29,42 +56,12 @@
                 return 0;
             }
         },
-        calculate: function(obj) {
-
-        },
-
         //check if the needed files have been loaded
         checkFile: function() {},
-
-        trigger: function(type) {
-
-        },
         loadfail: function(type) { // error process, image ajax iframe vhtml5
 
-        },
-        insertStyleTag : function( styles, id ) {
-
-            if ( id && $( '#'+id ).length ) {
-                return;
-            }
-
-            var style = doc.createElement( 'style' );
-            if ( id ) {
-                style.id = id;
-            }
-
-            DOM().head.appendChild( style );
-
-            if ( style.styleSheet ) { // IE
-                style.styleSheet.cssText = styles;
-            } else {
-                var cssText = doc.createTextNode( styles );
-                style.appendChild( cssText );
-            }
         }
     };
-
-    var event = "beforLoad,afterLoad,close,change";
     var keyboard = {
 
         keys : {
@@ -136,29 +133,24 @@
     var defaults = {
         width: 760,
         height: 428,
-        minWidth: 400,
-        minHeight: 200,
-
-        minTop: 40,
-        minLeft: 10,
-        holderWidth: 0,
-        holderHeight: 80,
+        
+        buttomSpace: 0,
+        leftSpace: 0,
 
         autoSize: true,
         closeBtn: true,
-        winBtn: true, //click overlay to close popup
+        winBtn: true,   //click overlay to close popup
 
         preload: false,
 
         transition: 'fade',
         transitionSetting: {},
-        sliderEffect: 'fade',
+        sliderEffect: 'zoom',
         sliderSetting: {},
 
         tpl: {
             overlay: '<div class="popup-overlay"></div>',
-            container: '<div class="popup-container"><div class="popup-content" ><div class="popup-content-inner"></div></div><div class="popup-info"></div><div class="popup-controls"></div></div>',
-            image: '<img class="popup-image" src="{href}" alt="" />',
+            container: '<div class="popup-container"><div class="popup-content"><div class="popup-content-inner"></div></div><div class="popup-controls"></div><div class="popup-info"></div></div>',
             iframe: '<iframe id="popup-frame{rnd}" name="popup-frame{rnd}" class="popup-iframe" frameborder="0" vspace="0" hspace="0"' + ($.browser.msie ? ' allowtransparency="true"' : '') + '></iframe>',
             error: '<p class="popup-error">The requested content cannot be loaded.<br/>Please try again later.</p>',
             closeBtn: '<a title="Close" class="popup-controls-close" href="javascript:;"></a>',
@@ -167,26 +159,12 @@
         }
     };
 
-    //add core css style to head 
-    (function(){
-        var css = '',
-            cssMap = {
-                overlay: 'position:fixed;display:none;opacity:'+op.overlayOpacity+';filter:alpha(opacity='+(op.overlayOpacity*100)+');top:0;left:0;width:100%;height:100%;background:'+op.overlayBackground+';z-index:99990',
-                container: 'position: absolute;',
-                close: ''
-            };
-
-    })();
-
-    _nativeFullscreen.listen();
-
-
-
     // Plugin constructor
     var Popup = $.Popup = function(data, options) {
         var dataPool;
 
-        var self = this;
+        var options = options || {},
+            self = this;
 
         //process on arguments
         var agms = arguments.length;
@@ -197,7 +175,7 @@
         this.active = false;
         //dataPool is a database
         this.dataPool = {
-            content: [], //thie could be set by plugin contains type url info 
+            content: [], //thie could be set by plugin contains type url info options
             components: [], //this could be set by skin config
             skin: ''
         };
@@ -212,11 +190,12 @@
         this.elems = null;     
         this.target = null;
 
+        this.options = options;
         this.current = null;
         this.coming = null;
 
         function init() {
-            dataPool.skin = options.skin || 'default';
+            dataPool.skin = options.skin || 'skinRimless';
             var skin = skins[dataPool.skin];
 
             //content
@@ -241,6 +220,7 @@
                 alert('you need specific the popup source !');
             }
             
+            
             self.current = $.extend(true, defaults, skin, options);
            
             //component
@@ -250,30 +230,30 @@
 
                     if (value !== false) {
                         component.name = key;
-                        if (toString.apply(value) === '[object Object]' { // component.options could be 'undefined' if not config
+                        if (toString.apply(value) === '[object Object]') { // component.options could be 'undefined' if not config
                             component.options = value;
                         }
                         dataPool.components.push(component);
-                        }
+                    }
 
-                    });
-                }
+                });
 
-
-                this.initialized = true;
+                self.initialized = true;
             }
         }
 
         init();
 
-        if (dataPool.content.length >== 2 || this.current.preload === true) {
+
+        if (dataPool.content.length >= 2 || this.current.preload === true) {
             this.isGroup = true;
         }
     };
     Popup.prototype = {
         constructor: Popup,
         _beforeshow: function() {
-            var self = this,
+            var DOM,
+                self = this,
                 current = this.current,
                 dataPool = this.dataPool,
                 comps = dataPool.components,
@@ -282,16 +262,30 @@
             //save DOM rel
             this.$overlay = $(tpl.overlay);
             this.$container = $(tpl.container);
-            this.$inner = this.$container.find('popup-content-inner');    
+            this.$inner = this.$container.find('.popup-content-inner');  
+            this.$close = $(tpl.closeBtn);  
+
+            DOM = this.$overlay.add(this.$container,this.$close);
+
+            //gallery build
+            if (this.isGroup) {
+                this.$prev = $(tpl.prev);
+                this.$next = $(tpl.next);
+                this.$container.find('.popup-controls').append(this.$prev,this.$next);
+
+                this.$prev.on('click',$.proxy(this.prev,this));
+                this.$next.on('click',$.proxy(this.next,this));
+            }
+
 
             //show overlay and container from tpl...
             this.$overlay.addClass(dataPool.skin).css({position:'fixed',display:'none',top:0,left:0,width:'100%',height:'100%',zIndex:99990});
-            this.$container.css({position:'absolute',display:'none'});
-            this.$overlay.add(this.$container)).appendTo($('body'));
+            this.$container.addClass(dataPool.skin).css({position:'fixed',display:'none',top:'50%',left:'50%',zIndex:99991});
+            DOM.appendTo($('body')); 
 
             //bound event
-            if (this.current.winBtn === true) {
-                $(tpl.overlay).on('click.popup',this.close);
+            if (current.winBtn === true) {
+                $(tpl.overlay).on('click.popup',$.proxy(this.close,this));
             }
 
             if (this.isGroup ===true && current.keyboard ===true) {
@@ -302,17 +296,22 @@
                 });
             }
 
-            $win.on('resize',this.resize);           
+            this.$close.on('click',$.proxy(this.close,this));
+            $win.on('resize',$.proxy(this.resize,this));    
 
-            // transtions
-            transtions[current.transition]('openEffect');
+            // transitions
+            transitions[current.transition]['openEffect'](this);    
 
             //show componnets
             $.each(comps, function(i, v) {
                 components[v.name].onReady(self,v.options);
             });
 
-            Util.trigger('beforeshow.popup');
+            //get container padding and border from css style
+            this._wp = this.$container.outerWidth() - this.$container.width();
+            this._hp = this.$container.outerHeight() - this.$container.height();
+
+            this.$container.trigger('beforeshow.popup');
         },
         show: function(index) {
             var data,
@@ -330,7 +329,12 @@
                 this._beforeshow();
             } 
 
-            Util.trigger('change.popup');
+            //load content options
+            if (data.options) { 
+                this.current = $.extend(true,this.current,data.options);
+            }
+            
+            this.$container.trigger('change.popup');
             
             this._load();
         },
@@ -341,27 +345,39 @@
 
             //load componnets content
             $.each(comps, function(i, v) {
-                components[v.name].load && components[v.name].load();
+                components[v.name].load && components[v.name].load(this,dtd);
             });
         },
         _afterLoad: function() {
+            var current = this.current;
 
             this._hideLoading();
 
+            if (!this._width && !this._height) {
+                //set when type load error
+                this._width = current.width;
+                this._height = current.height;
+            }
+ 
             if (this.active) {
                 // sliderEffect
-                sliderEffects[this.current.sliderEffect].init(this);
+                sliderEffects[current.sliderEffect]['init'](this);
             } else {
                 //for first open
                 this.$inner.empty();
-                this.$inner.append(this.current.content);
+                this.$inner.append(current.content);
+
+                this.resize();
             }
 
-            Util.trigger('afterLoad.popup');
+            
 
-            if (this.current.preload === true) {
+            this.$container.trigger('afterLoad.popup');
+
+            if (current.preload === true) {
 
                 //todo: this excute prload function
+                this.preload();
             }
 
             this.active = true;
@@ -384,40 +400,45 @@
         },
         close: function() {
             var current = this.current;
-            this.active = false;
 
-            transtions[current.transition].closeEffect();
-
-            Util.trigger('close');
-
-            $(this).off('.popup');
+            this.$container.trigger('close');
             
+            if (this.active === true) {
+                transtions[current.transition]['closeEffect'](this);
+                return ' ';
+            }
+            
+            this.$container.off('.popup');
+
+            keyboard.detach();
+
+            this.active = false;
         },
         destroy: function() {
             this.initialized = false;
         },
         resize: function() {
+
             var current = this.current,
                 buttomSpace = current.buttomSpace,
                 leftSpace = current.leftSpace,
-                boxWidth = this.$container.outerWidth(),
-                boxHeight = this.$container.outerHeight();
+                boxWidth = this._width + this._wp,
+                boxHeight = this._height + this._hp;
 
             //calculate
-            var width = Math.min( $win.width()-buttomSpace, boxWidth ),
-                height = Math.min( $win.height()-leftSpace, boxHeight ),
+            var width = Math.min( $win.width()-buttomSpace-40, boxWidth ),
+                height = Math.min( $win.height()-leftSpace-40, boxHeight ),
                 ratio = Math.min( width / boxWidth, height / boxHeight ),
                 destWidth = Math.round( boxWidth * ratio ),
                 destHeight = Math.round( boxHeight * ratio ),
                 to = {
                     width: destWidth,
                     height: destHeight,
-                    'margin-top': Math.ceil( destHeight / 2 ) *- 1 - buttomSpace,
-                    'margin-left': Math.ceil( destWidth / 2 ) *- 1 + leftSpace
+                    marginTop: Math.ceil( destHeight / 2 ) *- 1 - buttomSpace,
+                    marginLeft: Math.ceil( destWidth / 2 ) *- 1 + leftSpace
                 };
-            
-            this.$container.css( to );
 
+            this.$container.css( to );           
         },
 
         _hideLoading: function() {},
@@ -429,14 +450,14 @@
             $.each(this.dataPool.components, function(i, v) {
                 if (v.name === name) {
                     alert('this component has been added !')
-                    return
+                    return ' ';
                 }
             });
             component.name = name;
             component.options = options;
             this.dataPool.components.push(component);
 
-        }
+        },
         delComponent: function(name) {
             $.each(his.dataPool.components, function(i, v) {
                 if (v.name === name) {
@@ -444,790 +465,14 @@
                 }
             });
         }
-    }
+    };
 
-    $.extend(Popup, {
-
-        defaults: {
-            width: 760,
-            height: 428,
-            minWidth: 400,
-            minHeight: 200,
-
-            minTop: 40,
-            minLeft: 10,
-            holderWidth: 0,
-            holderHeight: 80,
-
-            action: false, // taggle to autoplay by click      
-            autoPlay: false,
-            playSpeed: 1500,
-            isPaused: false,
-
-            autoSize: true,
-            imgBg: '#222',
-            closeBtn: true,
-            winBtn: true, //click overlay to close popup
-
-            transition: 'fade',
-            transitionSetting: {},
-            sliderEffect: 'fade',
-            sliderSetting: {},
-
-            components: {
-                thumbnails: {},
-                controls: {},
-                title: {},
-            },
-
-            shake: {
-                distance: 15,
-                duration: 50,
-                transition: 'linear',
-                loops: 4,
-            },
-
-            selector: null, //need to fix
-            ajax: {
-                dataType: 'html',
-                headers: {
-                    'popup': true
-                }
-            },
-            swf: {
-                allowscriptaccess: 'always',
-                allowfullscreen: 'true',
-                wmode: 'transparent',
-            },
-            vhtml5: {
-                width: "100%",
-                height: "100%",
-
-                preload: "load",
-                controls: "controls",
-                poster: '',
-
-                type: {
-                    mp4: "video/mp4",
-                    webm: "video/webm",
-                    ogg: "video/ogg",
-                },
-                source: [
-                // {
-                //     src: 'video/movie.mp4',
-                //     type: 'mp4', // mpc,webm,ogv
-                // },
-                // {
-                //     src: 'video/movie.webm',
-                //     type: 'webm',
-                // },
-                // {
-                //     src: 'video/movie.ogg',
-                //     type: 'ogg',
-                // }
-                ],
-            },
-
-            keys: true,
-            initialTypeOptions: false,
-            preload: false,
-        },
-
-        isMobile: false,
-        defaultSkin: 'skinRimless',
-
-        current: {},
-        previous: {},
-        components: {},
-        
-        
-
-        //
-        //privite method
-        //
-
-        _init: function(element, options) {
-
-            var self = element,
-                $self = $(element),
-                defaults,
-                url, index, group, count, metas = {};
-
-
-            //filter the same popup-group name with the current click element as a group
-            group = Popup.elements.filter(function() {
-                var data = $(this).data('popup-group');
-                if (metas.group) {
-                    return data == metas.group;
-                }
-            });
-
-            count = group.length;
-            if (count >= 2) {
-                $.each(group, function(i, v) {
-                    if ($(v).data('popup-group-options')) {
-                        metas.groupoptions = $(v).data('popup-group-options');
-                    }
-                });
-            }
-
-            if (metas.options) {
-                metas.options = Popup._string2obj(metas.options);
-            }
-
-            if (metas.groupoptions) {
-                metas.options = $.extend(true, Popup._string2obj(metas.groupoptions), metas.options);
-            }
-
-            if (!options) {
-                options = {};
-            }
-
-            options = $.extend(true, options, metas.options, metas);
-            options.skin = options.skin || Popup.defaultSkin;
-
-            Popup.settings = {};
-            $.extend(true, Popup.settings, Popup.defaults, Popup.skins[options.skin], options); //要修改
-
-            //build Popup.group object
-            index = count >= 2 ? group.index(self) : 0;
-            url = $self.attr('href');
-
-            Popup.settings = $.extend({}, Popup.settings, {
-                index: index,
-                url: url,
-                element: element,
-            });
-
-            //adding index and get config for every member of group 
-            if (count >= 2) {
-                Popup.group = [];
-                Popup.groupoptions = metas.groupoptions ? Popup._string2obj(metas.groupoptions) : null;
-                group.each(function(i, v) {
-                    var $url, $type, obj = {};
-
-                    $url = $(v).attr('href');
-                    $type = $(v).data('popup-type');
-
-                    $.extend(obj, {
-                        index: i,
-                        url: $url,
-                        type: $type,
-                        element: v,
-                    });
-                    Popup.group.push(obj);
-                });
-            }
-            console.log(Popup.settings.type);
-        },
-        _afterLoad: function() {
-            var rez,
-            type = Popup.current.type;
-
-            //calculate necessary dimension before trigger open transition
-            rez = Popup._calculate();
-            Popup._trigger('resize', rez);
-
-            if (!Popup._isOpen) {
-
-                Popup.transitions[Popup.current.transition]['openEffect'](rez);
-
-                //remove old content before loading new content
-                Popup.$content.empty();
-                Popup.$content.append(Popup.current.content);
-            } else {
-
-                //slider
-                Popup.sliderEffects[Popup.current.sliderEffect]['init'](rez);
-            }
-
-            Popup._isOpen = true;
-
-            //give a chance to reset some infos
-            Popup._trigger('afterLoad');
-
-            //add autoPlay 
-            if (Popup.current.autoPlay === true) {
-                Popup._slider.play();
-            }
-
-            //preload
-            if (type == "image" && Popup.group && Popup.group[1]) {
-                Popup.types.image.imgPreLoad();
-            }
-
-            
-        },
-        _slider: {
-            timer: {},
-            clear: function() {
-                clearTimeout(this.timer);
-            },
-            set: function() {
-                this.clear();
-                if (Popup.group && Popup.group[1]) {
-                    this.timer = setTimeout(Popup.next, Popup.current.playSpeed);
-                }
-            },
-            play: function() {
-                Popup.current.isPaused = false;
-                this.set();
-            },
-            pause: function() {
-                this.clear();
-                Popup.current.isPaused = true;
-            }
-        },
-        _calculate: function() {
-            var top, left, width, height,
-            maxWidth, maxHeight,
-            result = {},
-            rez = {},
-            obj = {},
-
-            current = Popup.current,
-            aspect = current.aspect,
-
-            //save original image dimension,
-            originWidth = current.width,
-            originHeight = current.height,
-
-            winWidth = $(window).width(),
-            winHeight = $(window).height(),
-
-            //here create new vars to save some current properties
-            //so we will not change the current value and can reuse it in calcultion
-            minWidth = current.minWidth,
-            minHeight = current.minHeight,
-            minTop = current.minTop,
-            minLeft = current.minLeft,
-            holderWidth = current.holderWidth,
-            holderHeight = current.holderHeight,
-
-            scale = function(x, y, rate) {
-                var w, h;
-                w = y * rate;
-                h = x / rate;
-
-                if (w > x) {
-                    w = x;
-                }
-                if (h > y) {
-                    h = y;
-                }
-
-                return {
-                    w: w,
-                    h: h,
-                }
-            };
-
-            //here design for mobile
-            if (Popup._resposive(winWidth)) {
-                obj = Popup.current._mobile(holderWidth, holderHeight);
-                holderWidth = obj.w;
-                holderHeight = obj.h;
-                //mintop,minleft need to be processed
-            }
-
-            maxWidth = winWidth - holderWidth;
-            maxHeight = winHeight - holderHeight;
-
-            if (current.autoSize) {
-                width = (maxWidth - 2 * minLeft) > originWidth ? originWidth : (maxWidth - 2 * minLeft) < minWidth ? minWidth : (maxWidth - 2 * minLeft);
-                height = (maxHeight - 2 * minTop) > originHeight ? originHeight : (maxHeight - 2 * minTop) < minHeight ? minHeight : (maxHeight - 2 * minTop);
-
-                if (aspect) {
-                    result = scale(width, height, aspect);
-                    width = result.w;
-                    height = result.h;
-                }
-            } else {
-                width = Popup.settings.width;
-                height = Popup.settings.height;
-            }
-
-            //centered the container
-            top = (maxHeight - height) / 2 < minTop ? minTop : (maxHeight - height) / 2;
-            left = (maxWidth - width) / 2 < minLeft ? minLeft : (maxWidth - width) / 2;
-
-            //give a chance for components component resize
-            //note: it defaults padding and margin both equal to 0 
-            rez = {
-                winWidth: winWidth,
-                winHeight: winHeight,
-                containerWidth: width,
-                containerHeight: height,
-                holderWidth: holderWidth,
-                holderHeight: holderHeight,
-                top: top,
-                left: left,
-            };
-
-            return rez;
-
-            //here pass dimension info as a argument to components
-            Popup._trigger('resize', rez);
-        },
-        _resize: function() {
-            var rez = Popup._calculate(),
-                top = rez.top,
-                left = rez.left,
-                width = rez.containerWidth,
-                height = rez.containerHeight,
-                img = Popup.$content.find('img');
-
-            //reposition set on container
-            Popup.$container.css({
-                top: top,
-                left: left,
-            });
-            //resize set on content
-            Popup.$content.css({
-                width: width,
-                height: height,
-            });
-
-            //here pass dimension info as a argument to components
-            Popup._trigger('resize', rez);
-        },
-        _makeEls: function(tag, className, style) {
-            var element = document.createElement(tag),
-                $element = $(element);
-            if (arguments[1]) {
-                $element.addClass(className);
-            }
-            if (arguments[2]) {
-                $element.css(style);
-            }
-            return $element;
-        },
-        _string2obj: function(string) {
-            return eval("(" + '{' + string + '}' + ")");
-        },
-        _trigger: function(event) {
-            var component, components = Popup.components;
-            for (var component in components) {
-
-                //here to check wether to close some component
-                if (Popup.current.components[component] !== null) {
-                    components[component][event] && components[component][event](arguments[1]);
-                }
-            }
-        },
-        _loadfail: function(string) {
-            var $inner = $('<div><p>Sorry! cant find ' + string + ',</P></div>');
-            console.log('load failed');
-            $inner.css({
-                width: '100%',
-                height: '100%',
-                textAlign: 'center',
-                color: '#fff'
-            });
-            $.extend(Popup.current, {
-                width: 600,
-                height: 400,
-                content: $inner,
-            });
-
-            //Popup._hideLoading();
-            Popup._afterLoad();
-        },
-        _showLoading: function() {
-            var $loading;
-            Popup._hideLoading();
-
-            // If user will press the escape-button, the request will be canceled
-            $(document).on('keydown.loading', function() {
-                if ((e.which || e.keyCode) === 27) {
-                    Popup.cancel();
-                    return false;
-                }
-            });
-
-            $loading = Popup._makeEls('div', 'popup-loading');
-            $loading.appendTo(Popup.$container);
-        },
-        _hideLoading: function() {
-            $(document).unbind('keydown.loading');
-            $('.popup-loading').remove();
-        },
-        _resposive: function(width) {
-            var lower = 320,
-                upper = 479,
-                width = parseInt(width);
-
-            if (lower < width && upper > width) {
-                return true;
-            } else {
-                return false;
-            }
-        },
-
-        //
-        //adding public Method
-        //
-        show: function(contents, options) {
-            var $container, $content, $controls, $close, $custom, $info,
-            options, current, index, url, obj, type,
-            previous = Popup.current,
-                toString = Object.prototype.toString;
-
-            function bindEvents() {
-                //binding resize event on window
-                $(window).on('resize', function() {
-                    Popup._resize();
-                    return false;
-                });
-
-                // Key Bindings
-                if (Popup.current.keys && !Popup._isOpen && Popup.group) {
-                    $(document).bind('keydown.popup', function(e) {
-                        var key = e.keyCode;
-
-                        console.log(key);
-                        console.log(e.which);
-
-                        if (key === 27) {
-                            Popup.close();
-                            return false;
-                        }
-                        if (Popup.slider == true && key === 37) {
-                            Popup.prev();
-                            return false;
-                        } else if (Popup.slider == true && key === 39) {
-                            Popup.next();
-                            return false;
-                        }
-                    });
-                }
-
-                // //autoPlay
-                // if (Popup.current.autoPlay === true) {
-                //     $container.bind('hover',function(){
-                //         Popup._slider.pause();
-                //     });
-                // }                    
-            };
-
-            Popup.previous = previous;
-
-            //process options 
-            if (toString.apply(options) === '[object Object]') {
-                options = options || {};
-            } else if (!isNaN(options)) {
-
-                // only when options === number  
-                index = options;
-
-                console.log(Popup.groupoptions);
-                options = {};
-            }
-
-            if (!Popup.settings || Popup._isOpen) {
-
-                options.skin = options.skin || Popup.defaultSkin;
-                Popup.settings = {};
-                $.extend(true, Popup.settings, Popup.defaults, Popup.skins[options.skin], Popup.groupoptions);
-            }
-
-            //process contents
-            if (toString.apply(contents) === '[object Array]' && !Popup._isOpen) {
-                // for show([],{}||index);
-                var count = contents.length,
-                    i = 0;
-                Popup.group = [];
-                for (i; i < count; i++) {
-                    obj = {
-                        url: null,
-                        title: '',
-                    };
-                    if (toString.apply(contents[i]) === '[object String]') {
-                        obj.url = contents[i];
-                    } else if (toString.apply(contents[i]) === '[object Object]') {
-                        $.extend(obj, contents[i]);
-                    }
-                    Popup.group.push($.extend({}, options, obj));
-                }
-
-                if (isNaN(arguments[1])) {
-                    index = 0;
-                }
-                index = index % Popup.group.length;
-
-                if (!Popup.current) {
-                    Popup.current = {};
-                }
-
-                $.extend(true, Popup.current, Popup.settings, Popup.group[index]);
-
-                Popup.current.index = index;
-            } else if (!Popup._isOpen) {
-                if (arguments.length === 1) {
-                    //for public api show();
-                    Popup.current = $.extend(true, Popup.current, Popup.settings, arguments[0].options);
-                    Popup.current.url = arguments[0].url;
-                } else {
-                    //for private function show() and show({},index);
-                    Popup.current = $.extend(true, Popup.current, Popup.settings, options);
-                }
-            }
-
-            Popup.current.aspect = null;
-            current = Popup.current;
-
-            if (index < 0 || (Popup.group && index > Popup.group.length - 1)) {
-                index = 0;
-            }
-
-            //here we can see how it works
-            //click image: making Popup.current,Popup.group
-            //click next: extent Popup.current with Popup.group[index]
-            //note: Popup.current only made when firstly click
-            if (Popup.group && Popup.group[1]) {
-                if (arguments.length === 2 && toString.apply(arguments[1]) === '[object Number]') {
-                    Popup.current = $.extend({}, Popup.current, Popup.groupoptions, Popup.group[index]);
-                    Popup.current.index = index;
-                }
-                Popup.slider = true;
-            }
-
-            // trigger types verifaction.
-            $.each(Popup.types, function(key, value) {
-                if (Popup.types[key].match && Popup.types[key].match(current.url.split(',')[0])) {
-                    type = key;
-                    return false;
-                }
-            });
-
-            console.log(current.type, type);
-
-            type = current.type || type;
-            Popup.current.type = type;
-
-            console.log(type);
-
-            //initialize custom type register
-            Popup.types[type].initialize && Popup.types[type].initialize();
-
-            console.log(Popup.types);
-
-            // $('body').css({
-            //     overflow: 'hidden',
-            // });
-
-            //build popup frame
-            if (!Popup._isOpen) {
-
-                //create container 
-                $container = Popup._makeEls('div', 'popup-container');
-                $container.css({
-                    'position': 'absolute',
-                    'display': 'block',
-                });
-                $content = Popup._makeEls('div', 'popup-content').css({
-                    overflow: 'hidden',
-                    textAlign: 'center',
-                    position: 'relative',
-                });
-                $info = Popup._makeEls('div', 'popup-info');
-                $controls = Popup._makeEls('div', 'popup-controls');
-                $custom = Popup._makeEls('div', 'popup-custom');
-                $container.append($content, $info, $controls, $custom);
-
-                $.extend(Popup, {
-                    $container: $container,
-                    $content: $content,
-                    $info: $info,
-                    $controls: $controls,
-                    $custom: $custom,
-                });
-
-                if (!Popup.group || !Popup.group[1]) {
-                    Popup.current.holderHeight = 20;
-                }
-
-                //trigger the component registered on components object
-                Popup._trigger('onReady');
-
-                //add close buttom if controls component is cancelled
-                if (!Popup.$close && Popup.current.closeBtn) {
-                    $close = Popup._makeEls('div', 'popup-controls-close');
-                    $close.css({
-                        'position': 'absolute'
-                    }).appendTo($controls);
-                    $close.on('click', function() {
-                        Popup.close();
-                        return false;
-                    });
-                }
-
-                //set skin
-                if (Popup.$overlay) {
-                    Popup.$overlay.addClass(Popup.current.skin);
-                } else {
-                    Popup.$container.addClass(Popup.current.skin);
-                }
-
-                //to make transition more smooth
-                if (Popup.current.type == 'image') {
-                    Popup.$content.css({
-                        backgroundColor: Popup.current.imgBg
-                    });
-                }
-
-                //add container to overlay or body
-                $container.appendTo(Popup.$overlay || 'body');
-
-                //binding event
-                bindEvents();
-            }
-
-            Popup.types[type].load();
-
-            console.log(type);
-        },
-        close: function() {
-
-            //if already closed ,return
-            if (!Popup._isOpen) {
-                return
-            }
-
-            //trigger close transition
-            if (Popup.closeAnimate == null) {
-                Popup.closeAnimate = true;
-                return Popup.transitions[Popup.current.transition]['closeEffect']();
-            }
-
-            Popup.cancel();
-
-            //recover body setting
-            $('body').css({
-                overflow: 'scroll',
-            });
-
-            //unbind event
-            $(window).unbind('resize');
-            $(document).unbind('keydown.popup');
-            // Popup.$container.unbind('hover');
-
-            //delete skin
-            if (Popup.$overlay) {
-                Popup.$overlay.removeClass(Popup.current.skin);
-            } else {
-                Popup.$container.removeClass(Popup.current.skin);
-            }
-
-            //stop autoplay first before close
-            if (Popup.current.isPaused === false) {
-                Popup._slider.pause();
-            }
-
-            //trigger to remove the component registered on components object
-            Popup._trigger('close');
-
-            Popup.$container.remove();
-            Popup.$close = null;
-
-            Popup.closeAnimate = null;
-            Popup.current.isPaused = null;
-
-            Popup._isOpen = false;
-            Popup.current = null;
-            Popup.settings = null;
-            Popup.group = null;
-
-            return false;
-        },
-        next: function() {
-            var index = Popup.current.index,
-                count = Popup.group.length;
-            console.log(index);
-            index += 1;
-            if (index >= count) {
-                index = 0;
-            }
-
-            index = index % count;
-            Popup.current.index = index;
-            console.log(Popup.current.index);
-
-            Popup.show({}, index);
-        },
-        prev: function() {
-            var index = Popup.current.index,
-                count = Popup.group.length;
-            index -= 1;
-            if (index < 0) {
-                index = count - 1;
-            }
-            index = index % count;
-            Popup.current.index = index;
-            Popup.show({}, index);
-        },
-        //cancel iamge loading or abort ajax request
-        cancel: function() {
-            Popup._hideLoading();
-            if (Popup.photo) {
-                Popup.photo.onload = Popup.photo.onerror = null;
-            }
-            if (Popup.ajax) {
-                Popup.ajax.abort();
-            }
-            Popup.ajax = null;
-        },
-        update: function() {
-            Popup.show({}, Popup.current.index);
-        },
-        destory: function() {
-            Popup.close();
-            Popup.$overlay.remove();
-
-            Popup = null;
-        },
-        getCurrent: function() {
-            return Popup.current.index + 1;
-        },
-        hasNext: function() {
-            if (Popup.group && Popup.current.index < Popup.group.length - 1) {
-                return true;
-            } else {
-                return false;
-            }
-        },
-        play: function() {
-            Popup.current.autoPlay === true;
-            Popup.next();
-        },
-        pause: function() {
-            Popup._slider.pause();
-        },
-        isPaused: function() {
-            return Popup.current.isPaused;
-        },
-        isOpen: function() {
-            if (Popup._isOpen) {
-                return true;
-            } else {
-                return false;
-            }
-        },
-        jumpto: function(index) {
-            if (index < 0 && index > Popup.group.length - 1) {
-                index = 0;
-            }
-            Popup.show({}, index);
-        },
-
-
-
-        //open api
-    });
+    
 
     //static method for the page
 
     $.extend(Popup, {
+
         //for plugin to get outside data
         run: function(selector,options) {
             $(selector).Popup(options);
@@ -1236,7 +481,7 @@
         // registered type cant be auto matched , it need manually add 
         registerType: function(name, options) {
             //forbid to register a exist type
-            if (types[name]) { return }
+            if (types[name]) { return ''; }
 
             types[name] = {};
             
@@ -1245,19 +490,25 @@
             });
 
             //overwrite load method if it has load 
-            types[name].load && types[name].load = function(instance) {
-                //init before load
-                options.init && options.init(instance);
+            if (types[name].load) {
+                types[name].load = function(instance) {
+                    //init before load
+                    options.init && options.init(instance);
 
-                if (options.extends) {
-                    types[options.extends].load(instance);
-                } else {
-                    options.load(instance);
-                }
-            };
+                    if (options.extends) {
+                        types[options.extends].load(instance);
+                    } else {
+                        options.load(instance);
+                    }
+                };
+            }           
         },
-        registerSkin: function(name) {
-            Popup.defaultSkin = name;
+        registerSkin: function(name,options) {
+            if (skins[name]) {
+                alert('this skin is registered !');
+            } else {
+                skins[name] = options;
+            }
         },
         registerComponent: function(name, options) {
             if(components[name]) { return }
@@ -1266,9 +517,9 @@
     });
 
     //
-    //below object contains basic method and defaults for extending effect.
+    //  below object contains basic method and defaults for extending effect.
     //
-    var transitions = {}, sliderEffects = {}, components = {};
+    
 
     var skins = {
         skinRimless: {
@@ -1278,68 +529,20 @@
             holderHeight: 100,
 
             autoSize: true,
-            sliderEffect: 'none',
+            sliderEffect: 'zoom',
 
             components: {
-                controls: {
-                    ui: 'outside'
-                },
-                thumbnails: true
-            }
-            //ajust layout for mobile device
-            _mobile: function(holderWidth, holderHeight, minTop, minLeft) {
-                holderWidth = 0;
-                holderHeight = 10;
-                Popup.current.autoSize = true;
-                Popup.$content.find('img').css({
-                    width: '100%',
-                    height: '100%'
-                });
-                return {
-                    w: holderWidth,
-                    h: holderHeight,
-                    t: minTop,
-                    l: minLeft,
-                }
-            }
-
-        },
-        skinSimple: {
-            holderWidth: 20,
-            holderHeight: 120,
-
-            minTop: 20,
-            minLeft: 0,
-
-            autoSize: true,
-            sliderEffect: 'none',
-
-            components: {
-                controls: {
-                    ui: 'inside',
-                },
-                thumbnails: {
-                    padding: 2,
-                    bottom: 10,
-                }
+                //controls: {
+                    //ui: 'outside'
+                //},
+                //thumbnails: true
             },
 
-            _mobile: function(holderWidth, holderHeight, minTop, minLeft) {
-                holderWidth = 20;
-                holderHeight = 20;
-                Popup.current.autoSize = true;
-                Popup.$content.find('img').css({
-                    width: '100%',
-                    height: '100%'
-                });
-                return {
-                    w: holderWidth,
-                    h: holderHeight,
-                    t: minTop,
-                    l: minLeft,
-                }
-            }
-        },
+
+            //ajust layout for mobile device
+            _mobile: {}
+
+        }
     };
 
     var types = {
@@ -1356,47 +559,39 @@
 
                     this.onload = this.onerror = null;
 
+                    instance.current.image = {};
                     instance.current.image.width = width;
                     instance.current.image.height = height;
                     instance.current.image.aspect = width / height;
 
-                    //for centering image
-                    if (!Popup.current.autoSize) {
-                        if (width > height) {
-                            $(img).css({
-                                width: '100%',
-                                height: 'auto',
-                            });
-                        } else {
-                            $(img).css({
-                                height: '100%',
-                                width: 'auto',
-                            });
-                        }
-                    } else {
-                        $(img).css({
-                            width: '100%',
-                            height: '100%',
-                        });
-                    }
+                    instance._width = width;
+                    instance._height = height;
+
+                    $(img).css({
+                        width: '100%',
+                        height: '100%',
+                    });
 
                     instance.current.content = img;
-
                     instance._afterLoad();
+
                 };
 
                 img.onerror = function() {
                     this.onload = this.onerror = null;
+
+                    alert('error')
 
                     instance.current.content = Util.loadfail('image');
                     instance._afterLoad();
                 };
 
                 if (img.complete === undefined || !img.complete) {
-                    Util.showLoading();
+                    instance._showLoading();
                 }
 
                 img.src = instance.url;
+
             },
             imgPreLoad: function(instance) {
                 var group = Popup.group,
@@ -1410,7 +605,7 @@
         },
         inline: {
             match: function(url) {
-                return url.charAt(0) == "#";
+                return url.charAt(0) === "#";
             },
             load: function(instance) {
                 var $inline = $(Popup.current.url).clone().css({
@@ -1542,735 +737,169 @@
 
         //video && map are composite type,you should set type when using them
         //they dont have their own loading method,they process url,and then load with basic types' load method 
-        
     };
 
-    //
-    // here you can add your custom transition & slider effect , types , components 
-    //
 
     //transitions
-    transitions.zoom = {
-        defaults: {
-            openSpeed: 500,
-            closeSpeed: 500,
-        },
-        opts: {},
+    
+    var transitions = {};
 
-        openEffect: function(rez) {
-            var el = Popup.current.element,
-                pos,
-                origin, startPos, endPos;
-
-            this.opts = $.extend({}, this.defaults, Popup.current.transitionSetting),
-            origin = $(el).offset();
-            pos = {
-                x: $(document).scrollLeft(),
-                y: $(document).scrollTop(),
-            }
-            startPos = {
-                x: origin.left - pos.x,
-                y: origin.top - pos.y,
-            };
-
-            Popup.$overlay.fadeIn();
-
-            Popup.$container.css({
-                top: startPos.y,
-                left: startPos.x,
-                display: 'block',
-            }).animate({
-                top: rez.top,
-                left: rez.left,
-            }, 400);
-            Popup.$content.css({
-                width: 0,
-                height: 0,
-            }).animate({
-                'width': rez.containerWidth,
-                'height': rez.containerHeight,
-            }, 400);
-        },
-        closeEffect: function() {
-            var opts = $.extend({}, this.defaults, Popup.current.transitionSetting);
-            if (!Popup._isOpen) {
-                return
-            }
-            if (Popup.$overlay) {
-                Popup.$overlay.fadeOut(opts.closeSpeed, Popup.close);
-            } else {
-                Popup.$container.fadeOut(opts.closeSpeed, Popup.close);
-            }
-        },
-    };
     transitions.fade = {
         defaults: {
             openSpeed: 500,
             closeSpeed: 500,
         },
-        openEffect: function(rez) {
-            var opts = $.extend({}, this.defaults, Popup.current.transitionSetting);
-            if (Popup._isOpen) {
-                return
-            }
+        openEffect: function(instance) {
+            var opts = $.extend({}, this.defaults, instance.current.transitionSetting);
 
-            Popup.$container.css({
-                top: rez.top,
-                left: rez.left,
-            });
-            //resize set on content
-            Popup.$content.css({
-                width: rez.containerWidth,
-                height: rez.containerHeight,
-            });
+            instance.$overlay.fadeIn(opts.openSpeed);
+            instance.$container.fadeIn(opts.openSpeed);
 
-            if (Popup.$overlay) {
-                Popup.$container.css({
-                    'display': 'block'
-                });
-                Popup.$overlay.fadeIn(opts.openSpeed);
-            } else {
-                Popup.$container.fadeIn(opts.openSpeed);
-            }
         },
-        // closeEffect need callback function to close popup
-        closeEffect: function() {
-            var opts = $.extend({}, this.defaults, Popup.current.transitionSetting);
-            if (!Popup._isOpen) {
-                return
-            }
-            if (Popup.$overlay) {
-                Popup.$overlay.fadeOut(opts.closeSpeed, Popup.close);
-
-            } else {
-                Popup.$container.fadeOut(opts.closeSpeed, Popup.close);
-            }
+        // closeEffect need callback function
+        closeEffect: function(instance) {
+            var opts = $.extend({}, this.defaults, instance.current.transitionSetting);
+            
+            
+            instance.$overlay.fadeOut(opts.closeSpeed, instance.close);            
+            instance.$container.fadeOut(opts.closeSpeed, instance.close);
+           
         },
     };
-    transitions.dropdown = {
-        defaults: {
-            openSpeed: 150,
-            closeSpeed: 800,
-            span: 20,
-        },
-        opts: {},
-
-        openEffect: function(rez) {
-            var top = rez.top,
-                left = rez.left,
-                width = rez.containerWidth,
-                height = rez.containerHeight,
-                span = 40;
-            Popup.$overlay.fadeIn();
-            Popup.$content.css({
-                'width': width,
-                'height': height,
-            });
-            Popup.$container.css({
-                'display': 'block',
-                'top': -height,
-                'left': left,
-            }).animate({
-                'top': top + span,
-            }, {
-                duration: 800,
-                easing: 'swing',
-            }).animate({
-                'top': top,
-            }, {
-                duration: 500,
-                easing: 'swing',
-            });
-        },
-        closeEffect: function() {
-            var opts = $.extend({}, this.defaults, Popup.current.transitionSetting),
-                height = Popup.$container.height();
-            if (!Popup._isOpen) {
-                return
-            }
-            Popup.$container.animate({
-                'top': -height,
-            }, {
-                duration: 800,
-                easing: 'swing',
-            });
-
-            if (Popup.$overlay) {
-                Popup.$overlay.fadeOut(opts.closeSpeed, Popup.close);
-            } else {
-                Popup.$container.fadeOut(opts.closeSpeed, Popup.close);
-            }
-        },
-    };
+    
 
     //slider
-    sliderEffects.none = {
-        init: function(rez) {
-            //reposition set on container
-            Popup.$container.css({
-                top: rez.top,
-                left: rez.left,
-            });
 
-            //resize set on content
-            Popup.$content.css({
-                width: rez.containerWidth,
-                height: rez.containerHeight,
-            });
-            Popup.$content.empty();
-            Popup.$content.append(Popup.current.content);
-        },
-    };
+    var sliderEffects = {};
+
     sliderEffects.zoom = {
         defaults: {
-            speed: 500,
+            speed: 2000,
             easing: 'swing',
         },
-        init: function(rez) {
-            var opts = $.extend({}, this.defaults, Popup.current.sliderSetting);
+        init: function(instance) {
+            var rez,
+                current = instance.current,
+                buttomSpace = current.buttomSpace,
+                leftSpace = current.leftSpace,
+                opts = $.extend({}, this.defaults, current.sliderSetting);
 
-            Popup.$content.empty();
-            Popup.$content.append(Popup.current.content);
+            console.log('zoom')
 
-            Popup.$container.stop().animate({
-                top: rez.top,
-                left: rez.left,
+            instance.$container.stop().animate({
+                marginTop: Math.ceil( current._width / 2 ) *- 1 - buttomSpace,
+                marginLeft: Math.ceil( current._height / 2 ) *- 1 + leftSpace,
+                width: current._width,
+                height: current._height
             }, {
-                duration: 500,
-                easing: 'swing',
-            });
-            Popup.$content.stop().animate({
-                width: rez.containerWidth,
-                height: rez.containerHeight,
-            }, {
-                duration: 500,
-                easing: 'swing',
+                duration: opts.speed,
+                easing: opts.easing,
                 complete: function() {
-
+                    
                 }
             });
 
+            instance.$inner.empty();
+            instance.$inner.append(current.content);
+            
 
         }
     };
-    sliderEffects.fade = {
-        defaults: {
-            speed: 500,
-            easing: 'swing',
-        },
-        init: function(rez) {
-            var opts = $.extend({}, this.defaults, Popup.current.sliderSetting);
-            Popup.$container.css({
-                top: rez.top,
-                left: rez.left,
-            });
-
-            //resize set on content
-            Popup.$content.css({
-                width: rez.containerWidth,
-                height: rez.containerHeight,
-            });
-            Popup.previous.content.css({
-                zIndex: 2,
-            });
-
-            Popup.$content.append(Popup.current.content);
-
-            Popup.previous.content.animate({
-                'opacity': 0,
-            }, {
-                duration: 500,
-                easing: 'swing',
-                complete: function() {
-                    console.log($(this));
-
-                    $(this).remove();
-                }
-            });
-            //Popup.$content.append(Popup.current.content);
-        },
-    };
-
+    
     //components 
-    components.overlay = {
-        defaults: {},
-        opts: {},
-        onReady: function() {
-            if (!this.$overlay) {
-                this.create();
-            }
-            this.open();
-        },
-        create: function() {
-            var $overlay = Popup._makeEls('div', 'popup-overlay').appendTo('body');
-            $overlay.on('click', function(event) {
-                if ($(event.target).is('.popup-overlay') && Popup.current.winBtn) {
-                    Popup.close();
-                    $(this).css({
-                        cursor: 'pointer',
-                    })
-                    return false;
-                }
-            }).css({
-                display: 'none',
-                position: 'fixed',
-                top: 0,
-                left: 0,
-                width: '100%',
-                height: '100%',
-            });
 
-            Popup.$overlay = $overlay;
-        },
-        open: function() {
+    var components = {};
 
-        },
-        close: function() {
-            Popup.$overlay.remove();
-        }
-    };
-    components.controls = {
-        defaults: {
-            slider: true,
-            ui: 'outside',
-            autoPlay: false,
-            action: false,
-        },
-        opts: {},
-        active: false,
-
-        onReady: function() {
-            if (Popup.current.skin) {
-                this.opts = $.extend({}, this.defaults, Popup.current.components.controls);
-            } else {
-                this.opts = this.defaults;
-            }
-
-            console.log(Popup.current.components.controls)
-            console.log(this.opts);
-
-            if (!Popup.group) {
-                return
-            }
-
-            this.create();
-            this.open();
-            this.active = true;
-        },
-        create: function() {
-            var self = this,
-                $prev = Popup._makeEls('div', 'popup-controls-prev'),
-                $next = Popup._makeEls('div', 'popup-controls-next'),
-                $close = Popup._makeEls('div', 'popup-controls-close'),
-                $play = Popup._makeEls('div', 'popup-controls-play'),
-                bindEvents = function() {
-                    if (self.opts.action || self.opts.autoPlay) {
-                        Popup.$content.on('click', function() {
-                            if (Popup.current.isPaused === true) {
-                                slider.play();
-                            }
-                            if (Popup.current.isPaused === false) {
-                                slider.pause();
-                            }
-                        });
-                    }
-                    if (self.opts.action) {
-                        Popup.$content.on('click', function() {
-                            play();
-                        });
-                    }
-
-                    //bind slider button event
-                    $prev.on('click', function() {
-                        Popup.prev();
-                        return false;
-                    });
-                    $next.on('click', function() {
-                        Popup.next();
-                        return false;
-                    });
-
-                    //bind close button event
-                    $close.on('click', function() {
-                        Popup.close();
-                        return false;
-                    });
-                }
-
-            Popup.$controls.append($prev, $play, $next, $close);
-
-            $.extend(Popup, {
-                $prev: $prev,
-                $next: $next,
-                $close: $close,
-                $play: $play,
-            });
-
-            //optional ui
-            if (self.opts.ui == 'outside') {
-                Popup.$prev.css({
-                    'position': 'fixed',
-                });
-                Popup.$next.css({
-                    'position': 'fixed',
-                });
-            } else if (self.opts.ui == 'inside') {
-                Popup.$prev.css({
-                    'position': 'absolute',
-                });
-                Popup.$next.css({
-                    'position': 'absolute',
-                });
-            }
-
-            bindEvents();
-        },
-        open: function() {
-            if (this.opts.autoPlay) {
-                Popup.$play.css({
-                    'display': 'block'
-                });
-                Popup._slider.play();
-            }
-        },
-        close: function() {
-            Popup.$content && Popup.$content.unbind('click');
-            Popup.$prev && Popup.$prev.unbind('click');
-            Popup.$next && Popup.$next.unbind('click');
-            Popup.$controls && Popup.$controls.remove();
-            this.active = false;
-        },
-        resize: function(rez) {
-            var top, left;
-            if (!this.active || this.opts.ui !== 'outside') {
-                return
-            }
-
-            top = (rez.winHeight - rez.holderHeight) / 2;
-            left = (rez.winWidth - rez.containerWidth - rez.holderWidth) / 4;
-
-            Popup.$prev.css({
-                'position': 'fixed',
-                'top': top,
-                'left': left,
-            });
-            Popup.$next.css({
-                'position': 'fixed',
-                'top': top,
-                'right': left,
-            });
-        }
-    };
-    //need to change
-    components.thumbnails = {
-        defaults: {
-            count: 5,
-            unitWidth: 80,
-            unitHeight: 80,
-            bottom: 16,
-            left: 0,
-            padding: 0, //for border
-            gap: 20,
-        },
-        opts: {},
-        $thumbnails: null,
-        $thumHolder: null,
-        $inner: null,
-
-        visualWidth: null,
-
-        onReady: function() {
-
-            if (!Popup.group || Popup.current.type !== 'image') {
-                return
-            }
-
-            //for mobile
-            if (Popup.isMobile) {
-                Popup.current.holderWidth = 0;
-                Popup.current.holderHeight = 0;
-            }
-
-            this.opts = $.extend({}, this.defaults, Popup.current.components.thumbnails);
-
-            this.create();
-        },
-        create: function() {
-            var top, visualWidth, totalWidth,
-            unitWidth = this.opts.unitWidth,
-                unitHeight = this.opts.unitHeight,
-                bottom = this.opts.bottom,
-                left = this.opts.left,
-                padding = this.opts.padding,
-                gap = this.opts.gap,
-                count = this.opts.count,
-                group = Popup.group,
-                index = Popup.current.index,
-                $thumbnails = $('<div>').addClass('popup-thumbnails'),
-                $leftButtom = $('<div>').addClass('popup-thumbnails-left'),
-                $rightButtom = $('<div>').addClass('popup-thumbnails-right'),
-                $thumHolder = $('<div>').addClass('popup-thumbnails-holder'),
-                $inner = $('<div>').addClass('popup-thumbails-inner').appendTo($thumHolder),
-                moveEvent = function(direction) {
-                    var left = $inner.css('left');
-
-                    totalWidth = $inner.width();
-                    left = parseInt(left);
-
-                    if (direction == 'left') {
-                        $inner.css({
-                            'left': left - visualWidth < 0 ? 0 : (left - visualWidth),
-                        });
-                    } else {
-                        $inner.css({
-                            'left': -(left + visualWidth > totalWidth - visualWidth ? totalWidth - visualWidth : left + visualWidth),
-                        });
-                    }
-                };
-
-            console.log("thumbnails");
-
-            count = count > group.length ? group.length : count;
-            visualWidth = count * (unitWidth + 2 * padding) + (count - 1) * gap;
-
-            //set necessary css style
-            $inner.css({
-                'position': 'absolute',
-                'top': 0,
-                'left': 0,
-                'width': group.length * (unitWidth + 2 * padding) + (group.length - 1) * gap,
-            });
-
-            $thumHolder.css({
-                'display': 'inline-block',
-                'position': 'relative',
-                'width': visualWidth,
-                'height': unitHeight + 2 * padding,
-            });
-
-            $thumbnails.css({
-                'position': 'fixed',
-                'bottom': bottom,
-                'left': left,
-                'text-align': 'center',
-            }).append($leftButtom, $thumHolder, $rightButtom);
-
-            //load image
-            $.each(Popup.group, function(i) {
-                var url = Popup.group[i].url,
-                    $wrap = $('<a href="#">');
-
-                if (url == undefined) {
-                    return
-                }
-
-                $wrap.addClass('loading').appendTo($inner);
-
-                if (i === index) {
-                    //this to make transition more smooth
-                    $wrap.addClass('popup-thumbnails-active');
-                }
-
-                $('<img />').load(function() {
-                    $wrap.removeClass('loading');
-                    $(this).appendTo($wrap);
-                }).error(function() {
-                    $wrap.removeClass('loading');
-                    $wrap.removeClass('popup-thumbnails-active');
-                    $(this).appendTo($wrap);
-                }).attr('src', url);
-            });
-
-            $thumbnails.appendTo(Popup.$container);
-
-            //bind click to thumb buttom 
-            //note: Here has problem of DOM rendering on Opera
-            // change to stop spread symtax
-            $leftButtom.on('click', function(event) {
-                moveEvent('left');
-                event.stopPropagation();
-            });
-            $rightButtom.on('click', function() {
-                moveEvent('right');
-                event.stopPropagation();
-            });
-            $inner.children().on('click', function(event) {
-                var index = $inner.children().index(this);
-                Popup.show({}, index);
-            });
-
-            //store thumbnail DOM to obj
-            this.$thumbnails = $thumbnails;
-            this.$thumHolder = $thumHolder;
-            this.$inner = $inner;
-            this.visualWidth = visualWidth;
-        },
-        open: function(index) {
-            var gallery = Popup.group;
-            this.$inner.children().removeClass('popup-thumbnails-active').eq(index).addClass('popup-thumbnails-active');
-        },
-        afterLoad: function() {
-            var index = Popup.current.index;
-
-            if (!Popup.group || Popup.current.type !== 'image') {
-                return
-            }
-
-            this.open(index);
-            this.resetPosition(index);
-        },
-
-        //L:the distance from start to index of img,
-        //v: visualWidth, unit: the length of every img including gap
-        //left = left+(L-w)>0? -(L-w): left,
-        //left = left+L<0? -(L-unit): left,
-        resetPosition: function(index) {
-            var inner = this.$inner,
-                visualWidth = this.visualWidth,
-                length = (index + 1) * (this.opts.unitWidth + 2 * this.opts.padding) + index * this.opts.gap,
-                left = parseInt(inner.css('left'));
-
-            if (left + length - visualWidth > 0) {
-                left = visualWidth - length;
-            } else if (left + length < 0) {
-                left = this.opts.unitWidth + 2 * this.opts.padding - length;
-            }
-
-            inner.css({
-                'left': left,
-            });
-        }
-    };
-    components.title = {
-        $title: null,
-        onReady: function() {
-            if (!Popup.current.title) {
-                return
-            }
-            this.create();
-        },
-        create: function() {
-            var $title = $('<span>').addClass('popup-info-title').css({
-                zIndex: 10
-            });
-            $title.appendTo(Popup.$info).text(Popup.current.title);
-            this.$title = $title;
-        },
-        afterLoad: function() {
-            if (!this.$title) {
-                this.create();
-            } else {
-                this.$title.text(Popup.current.title);
-            }
-        },
-        close: function() {
-            this.$title = null;
-        }
-    };
-    components.counter = {
-        defaults: {},
-        $count: null,
-        total: null,
-        onReady: function(instance,options) {
-            if (!instance.isGroup) {
-                return
-            }
-            this.create();
-
-        },
-        create: function() {
-            var $count = $('<span>').addClass('popup-info-counter'),
-                total = Popup.group.length,
-                current = Popup.current.index + 1;
-            $count.appendTo(Popup.$info).text(current + "/" + total).css({
-                zIndex: 10
-            });
-            this.$count = $count;
-            this.total = total;
-        },
-        afterLoad: function() {
-            var current = Popup.current.index + 1;
-            if (!Popup.group) {
-                return
-            }
-
-            this.$count.text(current + "/" + this.total);
-        }
-    };
-
+    
 
     // jQuery plugin initialization 
     $.fn.Popup = function(options) {
         var self = this,
             $self = $(self);
 
-        function run() {
-    
-            $self.on('click', function(e) {
-                var start,index,group,
-                    data = [],
-                    config = [];
+        function run(instance) {
+            $(instance).on('click', function(e) {
+                var start,index,group = {},
+                    data = [], metas = {};
+
+                
+                //get user options on DOM protperties and store them on metas object
+                $.each($(instance).data(), function(k, v) {
+                    if (/^popup/i.test(k)) {
+                        metas[k.toLowerCase().replace(/^popup/i, '')] = v;
+                    }
+                });    
 
                 //filter the same popup-group name with the current click element as a group
-                group = $self.filter(function() {
+                group = self.filter(function() {
                     var data = $(this).data('popup-group');
                     if (metas.group) {
                         return data === metas.group;
                     }
-                });
+                });                                     
 
-                if (group === undefined) {
-                    group = $self;
+                if (group.length === 0) {
+                    var obj = 
+                    group = this;
+                    data.push({
+                        url: this.href,
+                        type: Util.checkType(this.href),
+                        options: metas
+                    });
+
+                } else {
+                    $.each(group, function(i, el) {
+                        var source = {},
+                            metas = {};
+                        // if doesnot have src property, ignore the element
+                        if (el.href) {
+                            source.url = el.href;
+                            source.type = Util.checkType(el.href);
+                        } else {
+                            console.log('cant find url in the element');
+                        }
+
+                        //get user options on DOM protperties and store them on metas object
+                        $.each($(el).data(), function(k, v) {
+                            if (/^popup/i.test(k)) {
+                                metas[k.toLowerCase().replace(/^popup/i, '')] = v;
+                            }
+                        });
+
+                        source.options = metas;
+                        data.push(source);
+                    });
                 }
 
-                $.each(group, function(i, el) {
-                    var source = {},
-                        metas = {};
-                    // if doesnot have src property, ignore the element
-                    if (el.href) {
-                        source.link = el.href;
-                        source.type = Util.checkType(el.src);
-                    } else {
-                        console.log('cant find link in the element');
-                    }
-                    data.push(source);
-
-                    //get user options on DOM protperties and store them on metas object
-                    $.each($(el).data(), function(k, v) {
-                        if (/^popup/i.test(k)) {
-                            metas[k.toLowerCase().replace(/^popup/i, '')] = v;
-                        }
-                    });
-                    config.push(metas);
-                });
-
-                index = group.index(group);
-                options = $.extend(true,options,config[index]);
+                index = $(group).index(instance); 
 
                 start = new Popup(data, options);
                 start.elems = group;
                 start.target = this;
-                group.length >== 2 && start.isGroup = true;
+
+                if ( group.length >= 2 ) {
+                    start.isGroup = true;
+                }
 
                 start.show(index);
 
                 return false;
             });
-
-            return start;
-        }       
+        }      
 
         return self.each(function() {
             if (!$.data(self, 'popup')) {
-                $.data(self, 'popup', run());
+                $.data(self, 'popup', run(this));
             }
         });
+
+
     };
 
 })(jQuery, document, window);
 
 
-//extend some little function
+/*//extend some little function
 
 $.Popup.prototype.shake: function(x, d, t, o, e, l) {
     var x = Popup.current.shake.distance,
@@ -2471,6 +1100,45 @@ $.Popup.registerType('map',{
     }
 });
 
+//register skin
+
+$Popup.registerSkin('skinSimple',{
+    holderWidth: 20,
+    holderHeight: 120,
+
+    minTop: 20,
+    minLeft: 0,
+
+    autoSize: true,
+    sliderEffect: 'none',
+
+    components: {
+        controls: {
+            ui: 'inside',
+        },
+        thumbnails: {
+            padding: 2,
+            bottom: 10,
+        }
+    },
+
+    _mobile: function(holderWidth, holderHeight, minTop, minLeft) {
+        holderWidth = 20;
+        holderHeight = 20;
+        Popup.current.autoSize = true;
+        Popup.$content.find('img').css({
+            width: '100%',
+            height: '100%'
+        });
+        return {
+            w: holderWidth,
+            h: holderHeight,
+            t: minTop,
+            l: minLeft
+        }
+    }
+});
+
 
 //register component: counter title thumbnail
 
@@ -2535,3 +1203,119 @@ $.Popup.Flickr.prototype = {
     constructor: $.Popup.Flickr,
     find: function(id) {},
 };
+
+//register transition 
+
+transitions.zoom = {
+    defaults: {
+        openSpeed: 500,
+        closeSpeed: 500,
+    },
+    opts: {},
+
+    openEffect: function(rez) {
+        var el = Popup.current.element,
+            pos,
+            origin, startPos, endPos;
+
+        this.opts = $.extend({}, this.defaults, Popup.current.transitionSetting),
+        origin = $(el).offset();
+        pos = {
+            x: $(document).scrollLeft(),
+            y: $(document).scrollTop(),
+        }
+        startPos = {
+            x: origin.left - pos.x,
+            y: origin.top - pos.y,
+        };
+
+        Popup.$overlay.fadeIn();
+
+        Popup.$container.css({
+            top: startPos.y,
+            left: startPos.x,
+            display: 'block',
+        }).animate({
+            top: rez.top,
+            left: rez.left,
+        }, 400);
+        Popup.$content.css({
+            width: 0,
+            height: 0,
+        }).animate({
+            'width': rez.containerWidth,
+            'height': rez.containerHeight,
+        }, 400);
+    },
+    closeEffect: function() {
+        var opts = $.extend({}, this.defaults, Popup.current.transitionSetting);
+        if (!Popup._isOpen) {
+            return
+        }
+        if (Popup.$overlay) {
+            Popup.$overlay.fadeOut(opts.closeSpeed, Popup.close);
+        } else {
+            Popup.$container.fadeOut(opts.closeSpeed, Popup.close);
+        }
+    },
+};
+
+transitions.dropdown = {
+    defaults: {
+        openSpeed: 150,
+        closeSpeed: 800,
+        span: 20,
+    },
+    opts: {},
+
+    openEffect: function(rez) {
+        var top = rez.top,
+            left = rez.left,
+            width = rez.containerWidth,
+            height = rez.containerHeight,
+            span = 40;
+        Popup.$overlay.fadeIn();
+        Popup.$content.css({
+            'width': width,
+            'height': height,
+        });
+        Popup.$container.css({
+            'display': 'block',
+            'top': -height,
+            'left': left,
+        }).animate({
+            'top': top + span,
+        }, {
+            duration: 800,
+            easing: 'swing',
+        }).animate({
+            'top': top,
+        }, {
+            duration: 500,
+            easing: 'swing',
+        });
+    },
+    closeEffect: function() {
+        var opts = $.extend({}, this.defaults, Popup.current.transitionSetting),
+            height = Popup.$container.height();
+        if (!Popup._isOpen) {
+            return
+        }
+        Popup.$container.animate({
+            'top': -height,
+        }, {
+            duration: 800,
+            easing: 'swing',
+        });
+
+        if (Popup.$overlay) {
+            Popup.$overlay.fadeOut(opts.closeSpeed, Popup.close);
+        } else {
+            Popup.$container.fadeOut(opts.closeSpeed, Popup.close);
+        }
+    },
+};
+
+//register sliderEffects
+
+*/

@@ -1,0 +1,6 @@
+<div id="ajax" style="width:100%;">
+	
+
+<button style="margin:83px;margin-left: 140px" onclick="$.Popup.shake();">shake </button>
+
+</div>

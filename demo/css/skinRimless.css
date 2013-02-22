@@ -5,18 +5,51 @@
 
 .skinRimless.popup-container {
   position: absolute;
-}
-
-.skinRimless.popup-container .popup-content {
-  overflow: hidden;
   background-color: white;
   border-radius: 5px;
 }
 
-.skinRimless.popup-container .popup-controls-prev {
+.skinRimless.popup-container .popup-loading {
   position: absolute;
   top: 50%;
-  left: -30%;
+  left: 50%;
+  width: 16px;
+  height: 16px;
+  margin-top: -8px;
+  margin-left: -8px;
+  background: url(../img/popup-loading.gif) no-repeat scroll 0 0 transparent;
+}
+
+.skinRimless.popup-container .popup-content {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border-radius: 5px;
+}
+
+.skinRimless.popup-container .popup-content .popup-content-inner {
+  width: 100%;
+  height: 100%;
+}
+
+.skinRimless.popup-container .popup-content .popup-ajax {
+  width: 100%;
+  height: 100%;
+  overflow: scroll;
+}
+
+.skinRimless.popup-container .popup-content img {
+  opacity: 0;
+}
+
+.skinRimless.popup-container .popup-content .fadeIn {
+  opacity: 1;
+}
+
+.skinRimless.popup-container .popup-controls-prev {
+  position: fixed;
+  top: 50%;
+  left: 150px;
   width: 30px;
   height: 30px;
   margin-top: -15px;
@@ -29,9 +62,9 @@
 }
 
 .skinRimless.popup-container .popup-controls-next {
-  position: absolute;
+  position: fixed;
   top: 50%;
-  right: -30%;
+  right: 150px;
   width: 30px;
   height: 30px;
   margin-top: -15px;

@@ -15,6 +15,7 @@
         doc = window.document,
         $doc = $(document),
         $win = $(window),
+        resizeTimer = null,
         toString = Object.prototype.toString;
     var IE = (function() {
         var v = 3,
@@ -29,7 +30,7 @@
     var Util = {
         checkType: function(url) {
             var result = '',
-                type = ['image','iframe','ajax','inline','vhtml5'];
+                type = ['image','iframe','ajax','inline','swf','vhtml5'];
 
             $.each(type,function(i,v) {
 
@@ -140,6 +141,7 @@
         autoSize: true,
         closeBtn: true,
         winBtn: true,   //click overlay to close popup
+        keyboard: true,
 
         preload: false,
 
@@ -148,11 +150,56 @@
         sliderEffect: 'zoom',
         sliderSetting: {},
 
+        //ajax config
+        selector: null,
+        ajax: {
+            dataType: 'html',
+            headers  : { 'popup': true } 
+        },
+
+        //swf config
+        swf: {
+            allowscriptaccess: 'always',
+            allowfullscreen: 'true',
+            wmode: 'transparent',
+        },
+
+        //vhtml5 config
+        vhtml5: {
+            width: "100%",
+            height: "100%",
+
+            preload: "load",
+            controls: "controls",
+            poster: '',
+            
+            type: {
+                mp4: "video/mp4",
+                webm: "video/webm",
+                ogg: "video/ogg",
+            },
+            source: [
+                // {
+                //     src: 'video/movie.mp4',
+                //     type: 'mp4', // mpc,webm,ogv
+                // },
+                // {
+                //     src: 'video/movie.webm',
+                //     type: 'webm',
+                // },
+                // {
+                //     src: 'video/movie.ogg',
+                //     type: 'ogg',
+                // }
+            ],
+        },
+
         tpl: {
             overlay: '<div class="popup-overlay"></div>',
             container: '<div class="popup-container"><div class="popup-content"><div class="popup-content-inner"></div></div><div class="popup-controls"></div><div class="popup-info"></div></div>',
             iframe: '<iframe id="popup-frame{rnd}" name="popup-frame{rnd}" class="popup-iframe" frameborder="0" vspace="0" hspace="0"' + ($.browser.msie ? ' allowtransparency="true"' : '') + '></iframe>',
             error: '<p class="popup-error">The requested content cannot be loaded.<br/>Please try again later.</p>',
+            loading: '<div class="popup-loading"></div>',
             closeBtn: '<a title="Close" class="popup-controls-close" href="javascript:;"></a>',
             next: '<a title="Next" class="popup-controls-next" href="javascript:;"><span></span></a>',
             prev: '<a title="Previous" class="popup-controls-prev" href="javascript:;"><span></span></a>'
@@ -244,7 +291,6 @@
 
         init();
 
-
         if (dataPool.content.length >= 2 || this.current.preload === true) {
             this.isGroup = true;
         }
@@ -264,7 +310,9 @@
             this.$container = $(tpl.container);
             this.$inner = this.$container.find('.popup-content-inner');  
             this.$close = $(tpl.closeBtn);  
+            this.$loading = $(tpl.loading).css({display:'none'});
 
+            this.$container.append(this.$loading);
             DOM = this.$overlay.add(this.$container,this.$close);
 
             //gallery build
@@ -277,7 +325,6 @@
                 this.$next.on('click',$.proxy(this.next,this));
             }
 
-
             //show overlay and container from tpl...
             this.$overlay.addClass(dataPool.skin).css({position:'fixed',display:'none',top:0,left:0,width:'100%',height:'100%',zIndex:99990});
             this.$container.addClass(dataPool.skin).css({position:'fixed',display:'none',top:'50%',left:'50%',zIndex:99991});
@@ -285,22 +332,22 @@
 
             //bound event
             if (current.winBtn === true) {
-                $(tpl.overlay).on('click.popup',$.proxy(this.close,this));
+                this.$overlay.on('click.popup',$.proxy(this.close,this));
             }
 
             if (this.isGroup ===true && current.keyboard ===true) {
                 keyboard.attach({
-                    escape: this.close,
-                    left: this.prev,
-                    right: this.next
+                    escape: $.proxy(this.close,this),
+                    left: $.proxy(this.prev,this),
+                    right: $.proxy(this.next,this)
                 });
             }
 
             this.$close.on('click',$.proxy(this.close,this));
-            $win.on('resize',$.proxy(this.resize,this));    
+            $win.on('resize',$.proxy(this._resize,this));    
 
             // transitions
-            transitions[current.transition]['openEffect'](this);    
+            transitions[current.transition]['openEffect'](this);   
 
             //show componnets
             $.each(comps, function(i, v) {
@@ -322,12 +369,12 @@
             data = dataPool.content[index];
 
             this.index = index;
-            this.type = data.type;
+            this.type =  data.options && data.options.type || data.type;
             this.url = data.url;
 
             if (this.active === false) {
                 this._beforeshow();
-            } 
+            }  
 
             //load content options
             if (data.options) { 
@@ -335,8 +382,13 @@
             }
             
             this.$container.trigger('change.popup');
+
+            // empty content before show another
+            this.$inner.empty();
+            this._showLoading();
             
             this._load();
+
         },
         _load: function() {
             var comps = this.dataPool.components;
@@ -349,9 +401,8 @@
             });
         },
         _afterLoad: function() {
-            var current = this.current;
-
-            this._hideLoading();
+            var to,
+                current = this.current;
 
             if (!this._width && !this._height) {
                 //set when type load error
@@ -360,17 +411,16 @@
             }
  
             if (this.active) {
+
                 // sliderEffect
                 sliderEffects[current.sliderEffect]['init'](this);
             } else {
-                //for first open
-                this.$inner.empty();
+                //for first open     
+                $(current.content).css({opacity:1});           
                 this.$inner.append(current.content);
-
+                this._hideLoading();
                 this.resize();
-            }
-
-            
+            }           
 
             this.$container.trigger('afterLoad.popup');
 
@@ -385,9 +435,10 @@
         next: function() {
             var index = this.index;
             index++;
-            if (index >= this.total - 1) {
+            if (index >= this.total) {
                 index = 0;
             }
+
             this.show(index);
         },
         prev: function() {
@@ -403,21 +454,24 @@
 
             this.$container.trigger('close');
             
-            if (this.active === true) {
-                transtions[current.transition]['closeEffect'](this);
-                return ' ';
-            }
-            
+            //if there's not the transition,use the default           
+            transitions[current.transition]['closeEffect'](this); 
+                      
             this.$container.off('.popup');
 
             keyboard.detach();
-
             this.active = false;
         },
         destroy: function() {
+            this.close();
+            if (this.elems) {
+                this.elems.off('click.popup')
+            }
             this.initialized = false;
         },
-        resize: function() {
+
+        //if calculate === true , never set container, just return a result
+        resize: function(calculate) { 
 
             var current = this.current,
                 buttomSpace = current.buttomSpace,
@@ -438,14 +492,37 @@
                     marginLeft: Math.ceil( destWidth / 2 ) *- 1 + leftSpace
                 };
 
-            this.$container.css( to );           
+            if (calculate === true) {
+                 return to;
+            } else {
+                this.$container.css( to ); 
+            }                     
         },
 
-        _hideLoading: function() {},
+        //reduce event number
+        _resize: function() {
 
-        _showLoading: function() {},
+            if (resizeTimer !== null) {
+                clearTimeout(resizeTimer);
+                resizeTimer = null;
+            }
 
-        addComponent: function(name, options) { //add component which is registered to current instance 
+            resizeTimer = setTimeout($.proxy(this.resize,this), 10);
+        },
+
+        _hideLoading: function() {
+            this.$loading.css({display:'none'});
+        },
+
+        _showLoading: function() {
+            this.$loading.css({display:'block'});
+        },
+        preload: function() {
+            //todo
+        },
+
+        //add component which is registered to current instance
+        addComponent: function(name, options) {  
             var component = {};
             $.each(this.dataPool.components, function(i, v) {
                 if (v.name === name) {
@@ -466,8 +543,6 @@
             });
         }
     };
-
-    
 
     //static method for the page
 
@@ -532,16 +607,11 @@
             sliderEffect: 'zoom',
 
             components: {
-                //controls: {
-                    //ui: 'outside'
-                //},
-                //thumbnails: true
+        
             },
-
 
             //ajust layout for mobile device
             _mobile: {}
-
         }
     };
 
@@ -568,8 +638,8 @@
                     instance._height = height;
 
                     $(img).css({
-                        width: '100%',
-                        height: '100%',
+                        width: '100.1%',
+                        height: '100.1%',
                     });
 
                     instance.current.content = img;
@@ -593,7 +663,7 @@
                 img.src = instance.url;
 
             },
-            imgPreLoad: function(instance) {
+            preload: function(instance) {
                 var group = Popup.group,
                     count = group.length,
                     obj;
@@ -608,65 +678,68 @@
                 return url.charAt(0) === "#";
             },
             load: function(instance) {
-                var $inline = $(Popup.current.url).clone().css({
+                var $inline = $(instance.url).clone().css({
                     'display': 'block'
                 });
 
-                Popup.current.content = $('<div>').addClass('popup-content-inner').css({
-                    'width': '100%',
-                    'height': '100%'
-                }).html($inline);
-                Popup._afterLoad();
+                instance.current.content = $('<div class="popup-inline">').append($inline);
+                instance._afterLoad();
             }
         },
         vhtml5: {
             match: function(url) {
                 return url.match(/\.(mp4|webm|ogg)$/i);
             },
-            load: function() {
+            load: function(instance) {
                 var $video,
-                source, index, type, arr,
-                url = Popup.current.url,
-                    vhtml5 = Popup.current.vhtml5;
+                    source, index, type, arr,
+                    url = instance.url,
+                    vhtml5 = instance.current.vhtml5;
 
-
-                $video = Popup._makeEls('video', 'popup-content-video').attr({
-                    'width': vhtml5.width,
-                    'height': vhtml5.height,
-                    'preload': vhtml5.preload,
-                    'controls': vhtml5.controls,
-                    'poster': vhtml5.poster,
+                $video = $('<video class="popup-content-video">').attr({
+                    width: '100%',
+                    height: '100%',
+                    preload: vhtml5.preload,
+                    controls: vhtml5.controls,
+                    poster: vhtml5.poster,
                 });
 
                 arr = url.split(',');
-                $.each($(arr), function(i, v) {
-                    var type;
-                    type = $.trim(v.split('.')[1]);
-                    source += '<source src="' + v + '" type="' + vhtml5.type[type] + '"></source>';
-                });
 
-                $.each(vhtml5.source, function(i, arr) {
-                    source += '<source src="' + arr.src + '" type="' + vhtml5.type[arr.type] + '"></source>';
-                });
+                //get videos address from url
+                if(arr.length !== 0) {
+                    $.each($(arr), function(i, v) {
+                        var type;
+                        type = $.trim(v.split('.')[1]);
+                        source += '<source src="' + v + '" type="' + vhtml5.type[type] + '"></source>';
+                    });
+                }
 
+                //get videos address from options
+                if (vhtml5.source.length !== 0) {
+                    $.each(vhtml5.source, function(i, arr) {
+                        source += '<source src="' + arr.src + '" type="' + vhtml5.type[arr.type] + '"></source>';
+                    });
+                }
+                
                 $(source).appendTo($video);
 
-                Popup.current.content = $video;
+                instance.current.content = $video;
 
-
-                Popup._afterLoad();
+                instance._afterLoad();
             }
         },
         swf: {
             match: function(url) {
                 return url.match(/\.(swf)((\?|#).*)?$/i);
             },
-            load: function() {
+            load: function(instance) {
                 var $object, $swf, content = '',
                     embed = '',
-                    swf = Popup.current.swf;
+                    current = instance.current,
+                    swf = current.swf;   
 
-                $object = $('<object class="popup-content-object" classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" width="100%" height="100%"><param name="movie" value="' + Popup.current.url + '"></param></object>');
+                $object = $('<object class="popup-content-object" classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" width="100%" height="100%"><param name="movie" value="' + instance.url + '"></param></object>');
 
                 $.each(swf, function(name, val) {
                     content += '<param name="' + name + '" value="' + val + '"></param>';
@@ -675,11 +748,11 @@
 
                 $(content).appendTo($object);
 
-                $swf = $('<embed src="' + Popup.current.url + '" type="application/x-shockwave-flash"  width="100%" height="100%"' + embed + '></embed>').appendTo($object);
+                $swf = $('<embed src="' + instance.url + '" type="application/x-shockwave-flash"  width="100%" height="100%"' + embed + '></embed>').appendTo($object);
 
-                Popup.current.content = Popup.$swf = $object;
+                instance.current.content = $object;
 
-                Popup._afterLoad();
+                instance._afterLoad();
             }
         },
         //you should set type when using iframe && ajax,they cant auto match, 
@@ -689,46 +762,47 @@
                     return true;
                 }
             },
-            load: function() {
-                var iframe = '<iframe name="popup-frame" class="popup-content-iframe" frameborder="0" vspace="0" hspace="0" webkitAllowFullScreen mozallowfullscreen allowFullScreen' + ($.browser.msie ? ' allowtransparency="true"' : '') + '></iframe>';
+            load: function(instance) {
+                var $iframe,
+                    iframe = instance.current.tpl.iframe; 
 
                 //$iframe
-                Popup.$iframe = $(iframe).css({
+                $iframe = $(iframe).css({
                     'width': '100%',
                     'height': '100%',
                     'border': 'none'
-                }).attr('src', Popup.current.url);
+                }).attr('src', instance.url);
 
-                Popup.current.content = Popup.$iframe;
-                Popup._afterLoad();
-
+                instance.current.content = $iframe;
+                instance._afterLoad();
             }
         },
         ajax: {
-            load: function() {
-                var content, current = Popup.current;
-                Popup.ajax = $.ajax($.extend({}, current.ajax, {
-                    url: current.url,
+            load: function(instance) {
+                var content, current = instance.current;
+
+                console.log(current.ajax)
+
+                $.ajax($.extend({}, current.ajax, {
+                    url: instance.url,
                     error: function() {
-                        Popup._loadfail('ajax');
+                        Util._loadfail('ajax');
                     },
                     success: function(data, textStatus) {
                         if (textStatus === 'success') {
-                            Popup._hideLoading();
+                            instance._hideLoading();
 
                             // proceed data
                             if (current.selector) {
-                                content = $('<div>').html(data).find(current.selector);
+                                content = $('<div class="popup-ajax">').html(data).find(current.selector);
                             } else {
-                                content = data;
+                                content = $('<div class="popup-ajax">').html(data);
                             }
 
-                            current.content = $('<div>').addClass('popup-content-inner').css({
-                                'width': '100%',
-                                'height': '100%',
-                                'overflow': 'scroll'
-                            }).html(content);
-                            Popup._afterLoad();
+                            current.content = content;
+
+
+                            instance._afterLoad();
                         }
                     }
                 }));
@@ -759,11 +833,9 @@
         // closeEffect need callback function
         closeEffect: function(instance) {
             var opts = $.extend({}, this.defaults, instance.current.transitionSetting);
-            
-            
-            instance.$overlay.fadeOut(opts.closeSpeed, instance.close);            
-            instance.$container.fadeOut(opts.closeSpeed, instance.close);
-           
+                       
+            instance.$overlay.fadeOut(opts.closeSpeed,function(){instance.$overlay.remove()});            
+            instance.$container.fadeOut(opts.closeSpeed,function(){instance.$container.remove()});         
         },
     };
     
@@ -774,8 +846,8 @@
 
     sliderEffects.zoom = {
         defaults: {
-            speed: 2000,
-            easing: 'swing',
+            duration: 200,
+            easing: 'linear',
         },
         init: function(instance) {
             var rez,
@@ -784,44 +856,68 @@
                 leftSpace = current.leftSpace,
                 opts = $.extend({}, this.defaults, current.sliderSetting);
 
-            console.log('zoom')
+            rez = $.proxy(instance.resize,instance)(true);    
 
-            instance.$container.stop().animate({
-                marginTop: Math.ceil( current._width / 2 ) *- 1 - buttomSpace,
-                marginLeft: Math.ceil( current._height / 2 ) *- 1 + leftSpace,
-                width: current._width,
-                height: current._height
-            }, {
-                duration: opts.speed,
-                easing: opts.easing,
-                complete: function() {
-                    
-                }
-            });
-
-            instance.$inner.empty();
-            instance.$inner.append(current.content);
+             
+            /*
+            // css3 transition
+            instance.$container.css( rez ); 
+            setTimeout(function(){
+                $(current.content).css({opacity:0});
+                instance.$inner.append(current.content); 
+                instance._hideLoading.apply(instance);
+            
+                $(current.content).css({opacity:1});   
+                console.log($(current.content)) 
+            },200); 
+            */
             
 
+            instance.$container.stop().animate( rez ,{
+                duration: opts.duration,
+                easing: opts.easing,
+                complete: function() {
+                    instance.$inner.append(current.content); 
+                    instance._hideLoading.apply(instance);
+                    $(current.content).animate({opacity:1},opts.duration)
+                    //$(current.content).addClass('fadeIn');
+                }
+            });
         }
     };
     
     //components 
 
-    var components = {};
-
-    
+    var components = {};  
 
     // jQuery plugin initialization 
     $.fn.Popup = function(options) {
-        var self = this,
-            $self = $(self);
+        var self = this;
+
+        if (typeof options === 'string') {
+            var api = $(this)[0].data('popup'),
+                method = options;
+            //return when there is not eles    
+            switch (method) {
+                case 'show':
+                    api.show();
+                    break;
+                case 'close':
+                    api.close();
+                    break;
+                case 'enable':
+                    api.enable();
+                    break;
+                case 'disable':
+                    api.disable();
+                    break;
+            }
+        }
 
         function run(instance) {
-            $(instance).on('click', function(e) {
+            $(instance).on('click.popup', function(e) {
                 var start,index,group = {},
                     data = [], metas = {};
-
                 
                 //get user options on DOM protperties and store them on metas object
                 $.each($(instance).data(), function(k, v) {
@@ -836,25 +932,27 @@
                     if (metas.group) {
                         return data === metas.group;
                     }
-                });                                     
+                });  
+
 
                 if (group.length === 0) {
-                    var obj = 
                     group = this;
                     data.push({
-                        url: this.href,
-                        type: Util.checkType(this.href),
+                        url: $(this).attr('href'),
+                        type: Util.checkType($(this).attr('href')),
                         options: metas
                     });
 
                 } else {
                     $.each(group, function(i, el) {
-                        var source = {},
+                        var url = $(el).attr('href'),
+                            source = {},
                             metas = {};
+
                         // if doesnot have src property, ignore the element
-                        if (el.href) {
-                            source.url = el.href;
-                            source.type = Util.checkType(el.href);
+                        if (url) {
+                            source.url = url;
+                            source.type = Util.checkType(url);
                         } else {
                             console.log('cant find url in the element');
                         }
@@ -877,6 +975,7 @@
                 start.elems = group;
                 start.target = this;
 
+
                 if ( group.length >= 2 ) {
                     start.isGroup = true;
                 }
@@ -892,8 +991,6 @@
                 $.data(self, 'popup', run(this));
             }
         });
-
-
     };
 
 })(jQuery, document, window);

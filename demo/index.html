@@ -40,7 +40,7 @@
     &lt;img src="img/1-thumbnail.jpg" alt="" /&gt;
 &lt;/a&gt;</code></pre>
                 <div class="example">
-                    <a class="popup" href="img/1.jpg" data-popup-transition="zoom" data-popup-title='this is a image' data-popup-skin='skinRimless'><img src="img/1-thumbnail.jpg" alt="" /></a>
+                    <a class="popup" href="img/1.jpg" data-popup-transition="fade" data-popup-title='this is a image' data-popup-skin='skinRimless'><img src="img/1-thumbnail.jpg" alt="" /></a>
                 </div>
             </section>
             <section>
@@ -71,7 +71,80 @@
                 <h3>Iframe</h3>
                 <pre class="has-example"><code class="language-markup">&lt;a class=&quot;popup&quot; href=&quot;http://baidu.com&quot; data-popup-type=&quot;iframe&quot;&gt;iframe&lt;/a&gt;</code></pre>
                 <div class="example">
-                    <a class="popup" href="http://baidu.com" data-popup-type="iframe" data-popup-options="width:'740',height:'460'">iframe</a>
+                    <a class="popup" href="http://baidu.com" data-popup-type="iframe" data-popup-width=740 data-popup-height=460 >iframe</a>
+                </div>
+            </section>
+            <section>
+                <h3>Videos</h3>
+                <pre class="has-example"><code class="language-markup">&lt;!-- SWF --&gt;
+&lt;a class="popup" 
+href="http://www.adobe.com/jp/events/cs3_web_edition_tour/swfs/perform.swf"&gt;SWF&lt;/a&gt;
+&lt;br /&gt;
+
+&lt;!-- Local Video --&gt;
+&lt;a class="popup"
+data-popup-type='vhtml5'
+href="video/movie.ogg,video/movie.mp4,video/movie.webm"
+&gt;Local Video&lt;/a&gt;</code></pre>
+                <div class="example">                   
+                    <a class="popup" 
+                    href="http://www.adobe.com/jp/events/cs3_web_edition_tour/swfs/perform.swf">SWF</a>
+                    <br />
+                    
+                    <a class="popup"
+                    data-popup-type='vhtml5'
+                    href="video/movie.ogg,video/movie.mp4,video/movie.webm"
+                    >Local Video</a>
+                </div>
+            </section>
+            <section>
+                <h3>Ouside Data -- not ready </h3>
+                <pre class="has-example"><code class="language-markup">
+&lt;!-- YouKu --&gt;
+&lt;a class="popup" 
+data-popup-type="video" 
+data-popup-options="closeBtn:true,winBtn:false,autoSize:false,width:480,height:400" 
+href="http://v.youku.com/v_show/id_XNDI1MDkyMDQ"&gt;YouKu&lt;/a&gt;
+&lt;br /&gt;
+&lt;!-- YouTube --&gt;
+&lt;a class="popup" 
+data-popup-type='video'
+href="http://www.youtube.com/watch?v=AFA-rOls8YA"&gt;Youtube&lt;/a&gt;
+&lt;br /&gt;
+&lt;!-- Vimeo --&gt;
+&lt;a class="popup" 
+data-popup-type='video'
+href="http://vimeo.com/39251390"&gt;Vimeo&lt;/a&gt;
+&lt;br /&gt;
+<!-- &lt;!-- Vid.ly --&gt;
+&lt;a class="popup" 
+data-popup-type='video'
+href="http://vid.ly/5u4h3e"&gt;Vid.ly&lt;/a&gt;
+&lt;br /&gt; --></code></pre>
+                <div class="example">
+                    <!-- YouKu -->
+                    <a class="popup" 
+                    data-popup-type="video" 
+                    data-popup-width="480"
+                    data-popup-height="400"
+                    href="http://v.youku.com/v_show/id_XNDI1MDkyMDQ">YouKu</a>
+                    <br />
+                    <!-- YouTube -->
+                    <a class="popup" 
+                    data-popup-type='video'
+                    href="http://www.youtube.com/watch?v=AFA-rOls8YA">Youtube</a>
+                    <br />
+                    <!-- Vimeo -->
+                    <a class="popup" 
+                    data-popup-type='video'
+                    href="http://vimeo.com/39251390">Vimeo</a>
+                    <br />
+                    <!-- Vid.ly -->
+                    <!-- <a class="popup" 
+                    data-popup-type='video'
+                    href="http://vid.ly/5u4h3e">Vid.ly</a>
+                    <br /> -->
+                    <!-- Local Video -->
                 </div>
             </section>
             
@@ -149,6 +222,10 @@
         });
 
         
+
+        
     </script>
 </body>
 </html>
+
+

@@ -35,7 +35,7 @@
 .skinRimless.popup-container .popup-content .popup-ajax {
   width: 100%;
   height: 100%;
-  overflow: scroll;
+  overflow-y: scroll;
 }
 
 .skinRimless.popup-container .popup-content img {

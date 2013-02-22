@@ -462,6 +462,8 @@
             keyboard.detach();
             this.active = false;
         },
+        enable: function() {},
+        disable: function() {},
         destroy: function() {
             this.close();
             if (this.elems) {
@@ -781,8 +783,6 @@
             load: function(instance) {
                 var content, current = instance.current;
 
-                console.log(current.ajax)
-
                 $.ajax($.extend({}, current.ajax, {
                     url: instance.url,
                     error: function() {
@@ -807,10 +807,7 @@
                     }
                 }));
             }
-        },
-
-        //video && map are composite type,you should set type when using them
-        //they dont have their own loading method,they process url,and then load with basic types' load method 
+        }
     };
 
 
@@ -897,7 +894,12 @@
         if (typeof options === 'string') {
             var api = $(this)[0].data('popup'),
                 method = options;
-            //return when there is not eles    
+
+            //return when there is not elems
+            if (api.length === 0) {
+                return ;
+            }
+                
             switch (method) {
                 case 'show':
                     api.show();
@@ -954,7 +956,7 @@
                             source.url = url;
                             source.type = Util.checkType(url);
                         } else {
-                            console.log('cant find url in the element');
+                            alert('cant find url in the element');
                         }
 
                         //get user options on DOM protperties and store them on metas object

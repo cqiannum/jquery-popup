@@ -1047,12 +1047,17 @@ $.Popup.registerComponent('thumbnail',{
     defaults: {
         thumbChunk: [],
         tpl: {
-            wrap:'',
-            item: '',
-            prev: '',
-            next: ''
+            wrap:'<div class="popup-thumbnails"></div>',
+            holder: '<div class="popup-thumbnails-holder"><div class="popup-thumbails-inner"></div></div>',
+            item: '<a href="javascript:;"></a>',
+            next: '<a title="Next" class="popup-thumbnail-next" href="javascript:;"><span></span></a>',
+            prev: '<a title="Previous" class="popup-thumbnail-prev" href="javascript:;"><span></span></a>'
         }
     },
+
+    //todo: adapt media list
+    meida: ['screen','ipad'],
+
     build: function() {
 
     },

@@ -131,6 +131,26 @@
         ANDROID: /android/.test(NAV),
         TOUCH: ('ontouchstart' in doc)
     };
+    var slider = {
+        timer: {},
+        clear: function() {
+            clearTimeout(this.timer);
+        },
+        set: function(instance) {
+            this.clear();
+            if (instance.isGroup) {
+                this.timer = setTimeout($.proxy(instance.next,instance),instance.current.playSpeed);
+            }  
+        },
+        play: function(instance) {
+            instance.isPaused = false;
+            this.set(instance);
+        },
+        pause: function(instance) {
+            this.clear();
+            instance.current.isPaused = true;
+        }
+    };
     var defaults = {
         width: 760,
         height: 428,
@@ -142,6 +162,10 @@
         closeBtn: true,
         winBtn: true,   //click overlay to close popup
         keyboard: true,
+
+        autoPlay: false,
+        playSpeed: 2000,
+        hoverPause: true,
 
         preload: false,
 
@@ -220,9 +244,10 @@
         this.initialized = false;
         this.isGroup = null;
         this.active = false;
+        this.isPaused = null;
         //dataPool is a database
         this.dataPool = {
-            content: [], //thie could be set by plugin contains type url info options
+            content: [], //thie could be set by plugin contains: type url info options loaded
             components: [], //this could be set by skin config
             skin: ''
         };
@@ -424,6 +449,20 @@
 
             this.$container.trigger('afterLoad.popup');
 
+            //add auto play
+            if (current.autoPlay === true) {
+                var self = this;
+                slider.play(this);
+                if (current.hoverPause === true) {
+                    this.$container.on('mouseenter.popup',function(){
+                        slider.pause(self);
+                    });
+                    this.$container.on('mouseleave.popup',function(){
+                        slider.play(self);
+                    })
+                }
+            }
+
             if (current.preload === true) {
 
                 //todo: this excute prload function
@@ -453,6 +492,12 @@
             var current = this.current;
 
             this.$container.trigger('close');
+
+            //pause slider before close
+            if (current.autoPlay === true) {
+                slider.pause(this);
+
+            }
             
             //if there's not the transition,use the default           
             transitions[current.transition]['closeEffect'](this); 
@@ -462,6 +507,7 @@
             keyboard.detach();
             this.active = false;
         },
+        play: function() {},
         enable: function() {},
         disable: function() {},
         destroy: function() {
@@ -471,6 +517,10 @@
             }
             this.initialized = false;
         },
+        _update: function() {
+            this.total = this.dataPool.content.length;
+        },
+
 
         //if calculate === true , never set container, just return a result
         resize: function(calculate) { 
@@ -522,7 +572,6 @@
         preload: function() {
             //todo
         },
-
         //add component which is registered to current instance
         addComponent: function(name, options) {  
             var component = {};
@@ -535,7 +584,6 @@
             component.name = name;
             component.options = options;
             this.dataPool.components.push(component);
-
         },
         delComponent: function(name) {
             $.each(his.dataPool.components, function(i, v) {
@@ -609,7 +657,7 @@
             sliderEffect: 'zoom',
 
             components: {
-        
+                        
             },
 
             //ajust layout for mobile device
@@ -836,7 +884,6 @@
         },
     };
     
-
     //slider
 
     var sliderEffects = {};
@@ -977,7 +1024,6 @@
                 start.elems = group;
                 start.target = this;
 
-
                 if ( group.length >= 2 ) {
                     start.isGroup = true;
                 }
@@ -996,6 +1042,29 @@
     };
 
 })(jQuery, document, window);
+
+$.Popup.registerComponent('thumbnail',{
+    defaults: {
+        thumbChunk: [],
+        tpl: {
+            wrap:'',
+            item: '',
+            prev: '',
+            next: ''
+        }
+    },
+    build: function() {
+
+    },
+    position: function() {},
+    onReady: function(instance,options) {
+        var settings = $.extend(true,defaults,options);
+
+        instance.$container.on('change.popup',function() {
+
+        });
+    }
+});
 
 
 /*//extend some little function
@@ -1418,3 +1487,4 @@ transitions.dropdown = {
 //register sliderEffects
 
 */
+

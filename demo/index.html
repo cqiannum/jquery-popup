@@ -169,7 +169,7 @@ href="http://vid.ly/5u4h3e"&gt;Vid.ly&lt;/a&gt;
                 </div>
             </section>
             <section>
-                <h3>Gallery: fixed container with fade sliderEffect</h3>
+                <h3>Gallery: with auto play</h3>
                 <pre class="has-example"><code class="language-markup">&lt;a class="popup" href="img/fix-1.jpg" 
      data-popup-group="gallery2" 
      data-Popup-group-options="autoSize:false,width:760,height:479,sliderEffect:'fade'"&gt;&lt;img style="width:100px,height:100px" src="img/fix-1.jpg" alt="" /&gt;&lt;/a&gt;
@@ -181,10 +181,10 @@ href="http://vid.ly/5u4h3e"&gt;Vid.ly&lt;/a&gt;
      data-popup-group="gallery2"&gt;&lt;img style="width:100px,height:100px" src="img/fix-4.jpg" alt="" /&gt;&lt;/a&gt;
 </code></pre>
                 <div class="example">
-                    <a class="popup" href="img/fix-1.jpg" data-popup-group="gallery2"><img style="width:100px,height:100px" src="img/fix-1.jpg" alt="" /></a>
-                    <a class="popup" href="img/fix-2.jpg" data-popup-group="gallery2"><img style="width:100px,height:100px" src="img/fix-2.jpg" alt="" /></a>
-                    <a class="popup" href="img/fix-3.jpg" data-popup-group="gallery2"><img style="width:100px,height:100px" src="img/fix-3.jpg" alt="" /></a>
-                    <a class="popup" href="img/fix-4.jpg" data-popup-group="gallery2"><img style="width:100px,height:100px" src="img/fix-4.jpg" alt="" /></a>
+                    <a class="popup1" href="img/fix-1.jpg" data-popup-group="gallery2"><img style="width:100px,height:100px" src="img/fix-1.jpg" alt="" /></a>
+                    <a class="popup1" href="img/fix-2.jpg" data-popup-group="gallery2"><img style="width:100px,height:100px" src="img/fix-2.jpg" alt="" /></a>
+                    <a class="popup1" href="img/fix-3.jpg" data-popup-group="gallery2"><img style="width:100px,height:100px" src="img/fix-3.jpg" alt="" /></a>
+                    <a class="popup1" href="img/fix-4.jpg" data-popup-group="gallery2"><img style="width:100px,height:100px" src="img/fix-4.jpg" alt="" /></a>
                 </div>
             </section>
             <section>
@@ -216,8 +216,9 @@ href="http://vid.ly/5u4h3e"&gt;Vid.ly&lt;/a&gt;
         })();
         $(document).ready(function() {
           $('.popup').Popup();  
+          $('.popup1').Popup({autoPlay:true});
           $('.popup-gallery').Popup({width:720,height:480,skin:'skinRimless'});
-          console.log('bound');         
+                 
         });
 
         

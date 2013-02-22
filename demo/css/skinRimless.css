@@ -49,7 +49,7 @@
 .skinRimless.popup-container .popup-controls-prev {
   position: fixed;
   top: 50%;
-  left: 150px;
+  left: 10%;
   width: 30px;
   height: 30px;
   margin-top: -15px;
@@ -64,7 +64,7 @@
 .skinRimless.popup-container .popup-controls-next {
   position: fixed;
   top: 50%;
-  right: 150px;
+  right: 10%;
   width: 30px;
   height: 30px;
   margin-top: -15px;

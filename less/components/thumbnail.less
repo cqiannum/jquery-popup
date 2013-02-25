@@ -11,22 +11,23 @@
 
     text-align: center;
 
-    .popup-thumbnails-left,.popup-thumbnails-right {
+
+    .popup-thumbnails-prev,.popup-thumbnails-next {
 	    display: inline-block;
 	    width: 17px;
 	    height: 28px;
 	    margin-bottom: 20px;
 	}
-	.popup-thumbnails-left {
+	.popup-thumbnails-prev {
 	    background: url(../img/thum-left-normal.png) no-repeat 0 0;
 	}
-	.popup-thumbnails-left:hover {
+	.popup-thumbnails-prev:hover {
 	    background: url(../img/thum-left-hover.png) no-repeat 0 0;
 	}
-	.popup-thumbnails-right {
+	.popup-thumbnails-next {
 	    background: url(../img/thum-right-normal.png) no-repeat 0 0;
 	}
-	.popup-thumbnails-right:hover {
+	.popup-thumbnails-next:hover {
 	    background: url(../img/thum-right-hover.png) no-repeat 0 0;
 	}
 	.popup-thumbnails-holder {
@@ -35,7 +36,7 @@
 	    display: inline-block;
 	    width: 280px;
 	    height: 80px;
-	    margin: 0 20px;
+	    margin: 0 40px;
 
 	    overflow: hidden;
 
@@ -46,6 +47,22 @@
 		    -o-transition: all 0.5s linear;
 		    -moz-transition: all 0.5s linear;
 		    transition: all 0.5s linear;
+
+		    span {
+		    	position: absolute;
+		    	top: 0;
+		    	left: 0;
+
+		    	width: 100%;
+		    	height: 100%;
+
+		    	background-color: rgba(0,0,0,0.5);
+		    }
+
+		    .popup-thumbnail-active span {
+		    	background-color: transparent;
+		    }
+
 		}
 
 	    img {
@@ -58,19 +75,17 @@
 		    display: block;
 		    float: left;
 
+		    position: relative;
+
 		    width: 80px;
 		    height: 80px;
 		    margin-left: 20px;
 
-		    opacity: 0.4;
 		}
 
 		a:first-child {
 		    margin-left: 0;
 		}
 
-		.popup-thumbnails-active {
-		    opacity: 1.0;
-		}
 	}	
 }

@@ -64,7 +64,6 @@
         }
     };
     var keyboard = {
-
         keys : {
             'UP': 38,
             'DOWN': 40,
@@ -220,7 +219,7 @@
 
         tpl: {
             overlay: '<div class="popup-overlay"></div>',
-            container: '<div class="popup-container"><div class="popup-content"><div class="popup-content-inner"></div></div><div class="popup-controls"></div><div class="popup-info"></div></div>',
+            container: '<div class="popup-container"><div class="popup-content"><div class="popup-content-inner"></div></div><div class="popup-controls"></div></div>',
             iframe: '<iframe id="popup-frame{rnd}" name="popup-frame{rnd}" class="popup-iframe" frameborder="0" vspace="0" hspace="0"' + ($.browser.msie ? ' allowtransparency="true"' : '') + '></iframe>',
             error: '<p class="popup-error">The requested content cannot be loaded.<br/>Please try again later.</p>',
             loading: '<div class="popup-loading"></div>',
@@ -293,7 +292,7 @@
             }
             
             
-            self.current = $.extend(true, defaults, skin, options);
+            self.current = $.extend(true, {},defaults, skin, options);
            
             //component
             if (skin.components) {
@@ -375,9 +374,12 @@
             transitions[current.transition]['openEffect'](this);   
 
             //show componnets
-            $.each(comps, function(i, v) {
-                components[v.name].onReady(self,v.options);
-            });
+            if (this.isGroup) {
+                $.each(comps, function(i, v) {
+                    components[v.name].onReady(self,v.options);
+                });
+            }
+            
 
             //get container padding and border from css style
             this._wp = this.$container.outerWidth() - this.$container.width();
@@ -409,11 +411,10 @@
             this.$container.trigger('change.popup');
 
             // empty content before show another
-            this.$inner.empty();
+            //this.$inner.empty();
             this._showLoading();
             
             this._load();
-
         },
         _load: function() {
             var comps = this.dataPool.components;
@@ -422,7 +423,7 @@
 
             //load componnets content
             $.each(comps, function(i, v) {
-                components[v.name].load && components[v.name].load(this,dtd);
+                components[v.name].load && components[v.name].load(this);
             });
         },
         _afterLoad: function() {
@@ -435,6 +436,7 @@
                 this._height = current.height;
             }
  
+
             if (this.active) {
 
                 // sliderEffect
@@ -507,6 +509,22 @@
             keyboard.detach();
             this.active = false;
         },
+
+        //add outside data
+        addData: function(arr) {
+            var len = arr.length;
+            //push data to data pool
+            $.each(arr,function(i,v){
+                //change to datapool kind
+                //check type then update instance
+
+
+                this._update();
+            });
+
+            //design for component to use new data
+            this.$container.trigger('dataChange.popup',arr);
+        },
         play: function() {},
         enable: function() {},
         disable: function() {},
@@ -522,7 +540,7 @@
         },
 
 
-        //if calculate === true , never set container, just return a result
+        //if calculate === true , not set container, just return a result
         resize: function(calculate) { 
 
             var current = this.current,
@@ -532,16 +550,16 @@
                 boxHeight = this._height + this._hp;
 
             //calculate
-            var width = Math.min( $win.width()-buttomSpace-40, boxWidth ),
-                height = Math.min( $win.height()-leftSpace-40, boxHeight ),
+            var width = Math.min( $win.width()-leftSpace-40, boxWidth ),
+                height = Math.min( $win.height()-buttomSpace-40, boxHeight ),
                 ratio = Math.min( width / boxWidth, height / boxHeight ),
                 destWidth = Math.round( boxWidth * ratio ),
                 destHeight = Math.round( boxHeight * ratio ),
                 to = {
                     width: destWidth,
                     height: destHeight,
-                    marginTop: Math.ceil( destHeight / 2 ) *- 1 - buttomSpace,
-                    marginLeft: Math.ceil( destWidth / 2 ) *- 1 + leftSpace
+                    marginTop: Math.ceil( destHeight / 2 ) *- 1 - Math.ceil( buttomSpace / 2 ),
+                    marginLeft: Math.ceil( destWidth / 2 ) *- 1 + Math.ceil( leftSpace / 2 )
                 };
 
             if (calculate === true) {
@@ -647,17 +665,15 @@
     
 
     var skins = {
+        defaults: {},
         skinRimless: {
-            minTop: 20,
-            minLeft: 10,
-            holderWidth: 0,
-            holderHeight: 100,
+            buttomSpace: 120,
 
             autoSize: true,
             sliderEffect: 'zoom',
 
             components: {
-                        
+                thumbnail: true
             },
 
             //ajust layout for mobile device
@@ -692,6 +708,7 @@
                         height: '100.1%',
                     });
 
+                    
                     instance.current.content = img;
                     instance._afterLoad();
 
@@ -731,6 +748,8 @@
                 var $inline = $(instance.url).clone().css({
                     'display': 'block'
                 });
+
+                instance.$inner.empty();
 
                 instance.current.content = $('<div class="popup-inline">').append($inline);
                 instance._afterLoad();
@@ -774,6 +793,8 @@
                 
                 $(source).appendTo($video);
 
+                instance.$inner.empty();
+
                 instance.current.content = $video;
 
                 instance._afterLoad();
@@ -800,6 +821,8 @@
 
                 $swf = $('<embed src="' + instance.url + '" type="application/x-shockwave-flash"  width="100%" height="100%"' + embed + '></embed>').appendTo($object);
 
+                instance.$inner.empty();
+
                 instance.current.content = $object;
 
                 instance._afterLoad();
@@ -822,6 +845,8 @@
                     'height': '100%',
                     'border': 'none'
                 }).attr('src', instance.url);
+
+                instance.$inner.empty();
 
                 instance.current.content = $iframe;
                 instance._afterLoad();
@@ -846,6 +871,8 @@
                             } else {
                                 content = $('<div class="popup-ajax">').html(data);
                             }
+
+                            instance.$inner.empty();
 
                             current.content = content;
 
@@ -900,8 +927,9 @@
                 leftSpace = current.leftSpace,
                 opts = $.extend({}, this.defaults, current.sliderSetting);
 
-            rez = $.proxy(instance.resize,instance)(true);    
 
+            instance.$inner.empty();    
+            rez = $.proxy(instance.resize,instance)(true);    
              
             /*
             // css3 transition
@@ -927,6 +955,16 @@
                     //$(current.content).addClass('fadeIn');
                 }
             });
+        }
+    };
+
+    //this style need fix dimension of container
+    sliderEffects.slide = {
+        defaults: {
+            duration: 200
+        },
+        init: function(instance) {
+
         }
     };
     
@@ -964,8 +1002,9 @@
         }
 
         function run(instance) {
+            var start;
             $(instance).on('click.popup', function(e) {
-                var start,index,group = {},
+                var index,group = {},
                     data = [], metas = {};
                 
                 //get user options on DOM protperties and store them on metas object
@@ -1032,6 +1071,7 @@
 
                 return false;
             });
+            return start;
         }      
 
         return self.each(function() {
@@ -1045,30 +1085,234 @@
 
 $.Popup.registerComponent('thumbnail',{
     defaults: {
-        thumbChunk: [],
+        count: 5,
+        unitWidth: 80,
+        unitHeight: 80,
+        bottom: 16,
+        left: 0,
+        padding: 0, //for border
+        gap: 20,
+
+        //todo: adapt media list
+        meida: ['screen','ipad'],
         tpl: {
             wrap:'<div class="popup-thumbnails"></div>',
-            holder: '<div class="popup-thumbnails-holder"><div class="popup-thumbails-inner"></div></div>',
-            item: '<a href="javascript:;"></a>',
-            next: '<a title="Next" class="popup-thumbnail-next" href="javascript:;"><span></span></a>',
-            prev: '<a title="Previous" class="popup-thumbnail-prev" href="javascript:;"><span></span></a>'
+            holder: '<div class="popup-thumbnails-holder"></div>',
+            inner: '<div class="popup-thumbails-inner"></div>',
+            item: '<a class="thumb-loading" href="javascript:;"><span></span></a>',
+            next: '<a title="Next" class="popup-thumbnails-next" href="javascript:;"></a>',
+            prev: '<a title="Previous" class="popup-thumbnails-prev" href="javascript:;"></a>'
+        },
+        map: {
+            none: '',
+            iframe: '',
+            ajax: '',
+            vhtml5: ''
         }
-    },
-
-    //todo: adapt media list
-    meida: ['screen','ipad'],
-
+    },  
+    loaded: null, 
+    opts: {},
+    thumbChunk: [],
     build: function() {
+        var tpl = this.opts.tpl;
+
+        this.$wrap = $(tpl.wrap);
+        this.$holder = $(tpl.holder);
+        this.$inner = $(tpl.inner).appendTo(this.$holder);
+        this.$prev = $(tpl.prev);
+        this.$next = $(tpl.next);
+
+        var self = this;
+        $.each(this.thumbChunk,function(i,v) {
+            $(tpl.item).appendTo(self.$inner);
+        });
+
+        this.$prev.add(this.$holder).add(this.$next).appendTo(this.$wrap);
+
+        this.$wrap.appendTo($('.popup-container'));
+    },
+    addChunk:function(chunks) {
+        var thumbChunk = this.thumbChunk;
+        $.each(chunks,function(i,v) {
+            thumbChunk.push(v);
+        });
+    },
+    active: function(index) {
+        var act = 'popup-thumbnail-active';
+        this.$holder.find('.popup-thumbnail-active').removeClass(act);
+        this.$holder.find('a').eq(index).addClass(act);
+
+        this.resetPos(index);
+    },
+    _position: function(options) {
+        var opts = this.opts,
+            top, showWidth,totalWidth,
+            unitWidth = opts.unitWidth,
+            unitHeight = opts.unitHeight,
+            bottom = opts.bottom,
+            left = opts.left,
+            padding = opts.padding,
+            gap = opts.gap,
+            count = opts.count,
+            n = this.thumbChunk.length;
+
+        count = count > n ? n : count; 
+        showWidth = opts.showWidth = count * (unitWidth+2*padding) + (count-1)*gap;
+
+        this.$wrap.css({
+            'position': 'fixed',
+            'bottom': bottom,
+            'left': left,
+        });
+        this.$holder.css({
+            'width': showWidth, 
+            'height': unitHeight + 2* padding
+        });
+        this.$inner.css({
+            'width': n * (unitWidth+2*padding) + (n -1)*gap
+        });
+    }, 
+    resetPos: function(index) {
+        var $inner = this.$inner,
+            opts = this.opts,
+            showWidth = this.opts.showWidth,
+            len = (index +1)*(opts.unitWidth+2*opts.padding) + index*opts.gap,
+            left = parseInt($inner.css('left')); 
+
+        if (left+len-showWidth > 0) {
+            left = showWidth - len;
+        } else if (left + len < 0) {
+            left = this.opts.unitWidth + 2*this.opts.padding - len;
+        }
+
+        $inner.css({
+            'left': left,
+        });
+    },
+    move: function(direction) {
+        var $inner = this.$inner,
+            left =  parseInt($inner.css('left')),
+            showWidth = parseInt(this.opts.showWidth),
+            totalWidth = parseInt($inner.width());
+
+        if (direction == 'left') {
+            $inner.css({
+                'left': left-showWidth <= 0 ? 0: (left-showWidth)
+            });
+        } else {
+            $inner.css({
+                'left': -(left+showWidth>totalWidth-showWidth ? totalWidth-showWidth:left+showWidth)
+            });
+        }
 
     },
-    position: function() {},
+
+    //main 
     onReady: function(instance,options) {
-        var settings = $.extend(true,defaults,options);
+        var $items,
+            self = this,
+            chunks = [],
+            data = instance.dataPool.content,
+            opts = $.extend(true,this.opts,this.defaults,options);
+
+        //here add thumbnail
+        $.each(data,function(key,value) {
+            if (value.thumb) {
+                chunks.push(value.thumb);
+            } else {
+                if (value.type === "image") {
+                    chunks.push(value.url);
+                } else if (opts.map[value.type]) {
+                    chunks.push(opts.map[value.type]);
+                } else {
+                    chunks.push(opts.map['none']);
+                }
+            }
+        });
+
+
+
+        this.addChunk(chunks);
+
+
+        this.build();  
+
+
+        $items = this.$holder.find('a');  
+
+        this._position();
+
+        //add to DOM
+
+        this.active(instance.index);     
+
+        this.$prev.on('click',function() { $.proxy(self.move,self)('left'); });
+        this.$next.on('click',function() { $.proxy(self.move,self)('right'); });
+        this.$holder.delegate('a','click',function(event) {
+            var index = $items.index(event.currentTarget);
+            instance.show(index);
+        });
 
         instance.$container.on('change.popup',function() {
-
+            self.active(instance.index);
         });
+        instance.$container.on('dataChange.popup',function(arr) {
+            //maybe it need some work
+            
+            $.proxy(self.addChunk,self)(arr);
+        });
+        instance.$container.on('close.popup',$.proxy(self.close,self));
+    },
+    _load: function(instance) {
+        var $items = this.$holder.find('a');
+       
+        $.each(this.thumbChunk,function(i,v) {
+            $('<img />').load(function() {
+                $items.eq(i).removeClass('thumb-loading').append($(this));
+            }).error(function() {
+                $items.ea(i).removeClass('thumb-loading').append($(this));
+            }).attr('src', v);
+        });  
+
+        this.loaded = true;
+    },
+    load: function(instance) {
+        if (this.loaded != true) {
+            this._load(instance);
+        }
+    },
+    close: function(){
+        this.$prev.off('click');
+        this.$next.off('click');
+        this.$holder.off('click');
+
+        this.loaded = false;
+        this.thumbChunk = [];
     }
+});
+
+$.Popup.registerComponent('infoBar',{
+    defaults: {
+        tpl: {
+            wrap: '<div class="popup-infobar"></div>',
+            title: '<span class="popup-title"></span>',
+            count: '<span class="popup-count"></span>'
+        }
+    },
+    opts: {},
+    onReady: function(instance,options) {
+        var opts = $.extend(true,this.opts,this.defaults,options),
+            tpl = opts.tpl;
+
+        this.$title = $(tpl.title);
+        this.$count = $(tpl.count);
+        this.$wrap = $(tpl.wrap).append(this.$title).append(this.$count).appendTo(instance.$container);
+    },
+    load: function(instance) {
+        this.$title.text(instance.title);
+        this.$count.text( instance.index + "/" +instance.total);
+    },
+    close: function(){}
 });
 
 

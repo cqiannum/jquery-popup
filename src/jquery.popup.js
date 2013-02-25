@@ -411,7 +411,6 @@
             this.$container.trigger('change.popup');
 
             // empty content before show another
-            //this.$inner.empty();
             this._showLoading();
             
             this._load();
@@ -486,7 +485,7 @@
         prev: function() {
             var index = this.index;
             index--;
-            if (index <= 0) {
+            if (index < 0) {
                 index = this.total - 1;
             }
             this.show(index);
@@ -751,8 +750,6 @@
                     'display': 'block'
                 });
 
-                instance.$inner.empty();
-
                 instance.current.content = $('<div class="popup-inline">').append($inline);
                 instance._afterLoad();
             }
@@ -795,8 +792,6 @@
                 
                 $(source).appendTo($video);
 
-                instance.$inner.empty();
-
                 instance.current.content = $video;
 
                 instance._afterLoad();
@@ -823,8 +818,6 @@
 
                 $swf = $('<embed src="' + instance.url + '" type="application/x-shockwave-flash"  width="100%" height="100%"' + embed + '></embed>').appendTo($object);
 
-                instance.$inner.empty();
-
                 instance.current.content = $object;
 
                 instance._afterLoad();
@@ -847,8 +840,6 @@
                     'height': '100%',
                     'border': 'none'
                 }).attr('src', instance.url);
-
-                instance.$inner.empty();
 
                 instance.current.content = $iframe;
                 instance._afterLoad();
@@ -873,8 +864,6 @@
                             } else {
                                 content = $('<div class="popup-ajax">').html(data);
                             }
-
-                            instance.$inner.empty();
 
                             current.content = content;
 
@@ -1305,6 +1294,7 @@ $.Popup.registerComponent('infoBar',{
     onReady: function(instance,options) {
         var opts = $.extend(true,this.opts,this.defaults,options),
             tpl = opts.tpl;
+        console.log('infoBar')
 
         this.$title = $(tpl.title);
         this.$count = $(tpl.count);

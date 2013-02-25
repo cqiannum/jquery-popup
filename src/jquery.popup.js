@@ -417,13 +417,14 @@
             this._load();
         },
         _load: function() {
-            var comps = this.dataPool.components;
+            var self = this,
+                comps = this.dataPool.components;
 
             types[this.type].load(this);
 
             //load componnets content
             $.each(comps, function(i, v) {
-                components[v.name].load && components[v.name].load(this);
+                components[v.name].load && components[v.name].load(self);
             });
         },
         _afterLoad: function() {
@@ -673,7 +674,8 @@
             sliderEffect: 'zoom',
 
             components: {
-                thumbnail: true
+                thumbnail: true,
+                infoBar: true,
             },
 
             //ajust layout for mobile device
@@ -1294,7 +1296,7 @@ $.Popup.registerComponent('thumbnail',{
 $.Popup.registerComponent('infoBar',{
     defaults: {
         tpl: {
-            wrap: '<div class="popup-infobar"></div>',
+            wrap: '<div class="popup-infoBar"></div>',
             title: '<span class="popup-title"></span>',
             count: '<span class="popup-count"></span>'
         }
@@ -1309,10 +1311,28 @@ $.Popup.registerComponent('infoBar',{
         this.$wrap = $(tpl.wrap).append(this.$title).append(this.$count).appendTo(instance.$container);
     },
     load: function(instance) {
-        this.$title.text(instance.title);
-        this.$count.text( instance.index + "/" +instance.total);
+
+        this.$title.text(instance.current.title);
+        this.$count.text( (instance.index+1) + "/" + instance.total);
+
+
     },
     close: function(){}
+});
+
+$.Popup.registerSkin('skinSimple',{
+    buttomSpace: 120,
+
+    autoSize: true,
+    sliderEffect: 'zoom',
+
+    components: {
+        thumbnail: true,
+        infoBar: true,
+    },
+
+    //ajust layout for mobile device
+    _mobile: {}
 });
 
 

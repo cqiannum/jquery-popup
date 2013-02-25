@@ -91,10 +91,20 @@ module.exports = function(grunt) {
                     compile: true
                 }
             },
+
+            //defaultSkin: {},
             
             skin_skinRimless: {
-                src: ["skins/skinRimless/**/*.less","less/components/**/*.less"],
+                src: ["skins/skinRimless/**/*.less","skins/skinRimless/components/**/*.less"],
                 dest: 'demo/css/skinRimless.css',
+                options: {
+                    compile: true
+                }
+            },
+
+            skin_skinSimple: {
+                src: ["skins/skinSimple/**/*.less","skins/skinSimple/components/**/*.less"],
+                dest: 'demo/css/skinSimple.css',
                 options: {
                     compile: true
                 }

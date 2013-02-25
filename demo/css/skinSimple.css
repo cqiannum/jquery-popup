@@ -1,0 +1,161 @@
+.skinSimple .popup-infoBar {
+  position: absolute;
+  bottom: -26px;
+  left: 0;
+  width: 100%;
+  height: 20px;
+  line-height: 20px;
+  color: #fff;
+}
+
+.skinSimple .popup-infoBar .popup-title {
+  float: left;
+  font: 12px/1.2 Verdana, sans-serif;
+  color: #000;
+  text-indent: 12px;
+  opacity: 0.6;
+}
+
+.skinSimple .popup-infoBar .popup-count {
+  position: absolute;
+  top: -30px;
+  right: 15px;
+  padding: 0 10px;
+  font: 12px/1.2 Verdana, sans-serif;
+  line-height: 20px;
+  background-color: rgba(0, 0, 0, 0.5);
+  border-radius: 9px;
+}
+
+/*====== thumbnails =======*/
+
+.skinSimple .popup-thumbnails {
+  position: fixed;
+  bottom: 16px;
+  left: 0;
+  display: block;
+  width: 100%;
+  min-width: 650px;
+  text-align: center;
+}
+
+.skinSimple .popup-thumbnails .popup-thumbnails-prev,
+.skinSimple .popup-thumbnails .popup-thumbnails-next {
+  display: none;
+}
+
+.skinSimple .popup-thumbnails .popup-thumbnails-holder {
+  position: relative;
+  display: inline-block;
+  width: 280px;
+  height: 80px;
+  margin: 0 40px;
+  overflow: hidden;
+}
+
+.skinSimple .popup-thumbnails .popup-thumbnails-holder .popup-thumbails-inner {
+  position: absolute;
+  -webkit-transition: all 0.5s linear;
+     -moz-transition: all 0.5s linear;
+       -o-transition: all 0.5s linear;
+          transition: all 0.5s linear;
+}
+
+.skinSimple .popup-thumbnails .popup-thumbnails-holder .popup-thumbails-inner span {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 80px;
+  height: 80px;
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.skinSimple .popup-thumbnails .popup-thumbnails-holder .popup-thumbails-inner .popup-thumbnail-active span {
+  background-color: transparent;
+}
+
+.skinSimple .popup-thumbnails .popup-thumbnails-holder img {
+  width: 100%;
+  height: 100%;
+  border: 2px solid #fff;
+  border-radius: 5px;
+}
+
+.skinSimple .popup-thumbnails .popup-thumbnails-holder a {
+  position: relative;
+  display: block;
+  float: left;
+  width: 78px;
+  height: 76px;
+  margin-left: 20px;
+}
+
+.skinSimple .popup-thumbnails .popup-thumbnails-holder a:first-child {
+  margin-left: 0;
+}
+
+.skinSimple.popup-overlay {
+  cursor: pointer;
+  background: none repeat scroll 0 0 rgba(0, 0, 0, 0.9);
+}
+
+.skinSimple.popup-container {
+  position: absolute;
+  background-color: white;
+  border-radius: 5px;
+}
+
+.skinSimple.popup-container .popup-loading {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 16px;
+  height: 16px;
+  margin-top: -8px;
+  margin-left: -8px;
+  background: url(../img/popup-loading.gif) no-repeat scroll 0 0 transparent;
+}
+
+.skinSimple.popup-container .popup-content {
+  border: 10px solid #fff;
+  border-bottom: 30px solid #fff;
+  border-radius: 5px;
+}
+
+.skinSimple.popup-container .popup-controls-prev {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 30px;
+  height: 62px;
+  margin-top: -31px;
+  text-indent: -9999px;
+  background: url(../img/whiteBorder-prev.png) no-repeat scroll 0 0 transparent;
+}
+
+.skinSimple.popup-container .popup-controls-next {
+  position: absolute;
+  top: 50%;
+  right: 0;
+  width: 30px;
+  height: 62px;
+  margin-top: -31px;
+  text-indent: -9999px;
+  background: url(../img/whiteBorder-next.png) no-repeat scroll 0 0 transparent;
+}
+
+.skinSimple.popup-container .popup-controls-close {
+  position: absolute;
+  top: -15px;
+  right: -15px;
+  display: block;
+  width: 30px;
+  height: 30px;
+  text-indent: -9999px;
+  background: url(../img/buttom-close-normal.png) no-repeat 0 0;
+  opacity: 0.7;
+}
+
+.skinSimple.popup-container .skinSimple .popup-controls-close:hover {
+  opacity: 1;
+}

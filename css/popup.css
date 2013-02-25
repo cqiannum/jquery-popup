@@ -1,3 +1,27 @@
+.popup-infoBar {
+  position: absolute;
+  bottom: -30px;
+  left: 0;
+  width: 100%;
+  height: 20px;
+  line-height: 20px;
+  color: #fff;
+}
+
+.popup-infoBar .popup-title {
+  float: left;
+  text-indent: 12px;
+}
+
+.popup-infoBar .popup-count {
+  position: absolute;
+  top: -30px;
+  right: 8px;
+  padding: 0 10px;
+  background-color: rgba(0, 0, 0, 0.5);
+  border-radius: 5px;
+}
+
 /*====== thumbnails =======*/
 
 .popup-thumbnails {
@@ -82,6 +106,4 @@
 .popup-thumbnails .popup-thumbnails-holder a:first-child {
   margin-left: 0;
 }
-
-
 

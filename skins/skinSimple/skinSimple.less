@@ -9,6 +9,10 @@
     background-color: white;
     border-radius: 5px; 
 
+    padding: 10px 10px 25px 10px;
+    overflow: visible !important;
+    
+
     .popup-loading {
         position: absolute;
         top: 50%;
@@ -24,10 +28,16 @@
     }
 
     .popup-content {
-
-        border: 10px solid #fff;
-        border-bottom: 20px solid #fff;
+        width: 100%;
+        height: 100%;
         border-radius: 5px; 
+        .popup-content-inner {
+            width: 100%;
+            height: 100%;
+        }
+        img {
+            opacity: 0;
+        }
     }
 
     .popup-controls-prev {

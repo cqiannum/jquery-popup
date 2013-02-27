@@ -1,6 +1,6 @@
 .skinRimless .popup-infoBar {
   position: absolute;
-  bottom: -30px;
+  bottom: -23px;
   left: 0;
   width: 100%;
   height: 20px;
@@ -10,16 +10,20 @@
 
 .skinRimless .popup-infoBar .popup-title {
   float: left;
-  text-indent: 12px;
+  font: 14px/20px Verdana, sans-serif;
+  color: #fff;
+  opacity: 0.8;
 }
 
 .skinRimless .popup-infoBar .popup-count {
   position: absolute;
-  top: -30px;
-  right: 8px;
-  padding: 0 10px;
-  background-color: rgba(0, 0, 0, 0.5);
-  border-radius: 5px;
+  top: -24px;
+  right: 15px;
+  padding: 0 5px;
+  font: 12px/1.3 Verdana, sans-serif;
+  background-color: #000;
+  border-radius: 9px;
+  opacity: 0.8;
 }
 
 /*====== thumbnails =======*/
@@ -69,6 +73,8 @@
 
 .skinRimless .popup-thumbnails .popup-thumbnails-holder .popup-thumbails-inner {
   position: absolute;
+  top: 0;
+  left: 0;
   -webkit-transition: all 0.5s linear;
      -moz-transition: all 0.5s linear;
        -o-transition: all 0.5s linear;
@@ -91,7 +97,6 @@
 .skinRimless .popup-thumbnails .popup-thumbnails-holder img {
   width: 100%;
   height: 100%;
-  border-radius: 5px;
 }
 
 .skinRimless .popup-thumbnails .popup-thumbnails-holder a {
@@ -114,8 +119,8 @@
 
 .skinRimless.popup-container {
   position: absolute;
-  background-color: white;
-  border-radius: 5px;
+  overflow: visible !important;
+  border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .skinRimless.popup-container .popup-loading {
@@ -132,8 +137,12 @@
 .skinRimless.popup-container .popup-content {
   width: 100%;
   height: 100%;
-  overflow: hidden;
-  border-radius: 5px;
+  background-color: white;
+}
+
+.skinRimless.popup-container .popup-content .popup-content-inner {
+  width: 100%;
+  height: 100%;
 }
 
 .skinRimless.popup-container .popup-content .popup-content-inner {
@@ -149,6 +158,8 @@
 
 .skinRimless.popup-container .popup-content img {
   opacity: 0;
+  -webkit-box-shadow: inset 0 0px 0px 1px rgba(254, 254, 254, 0.5);
+          box-shadow: inset 0 0px 0px 1px rgba(254, 254, 254, 0.5);
 }
 
 .skinRimless.popup-container .popup-content .fadeIn {
@@ -171,7 +182,7 @@
 }
 
 .skinRimless.popup-container .popup-controls-next {
-  position: absolute;
+  position: fixed;
   top: 50%;
   right: 10%;
   width: 30px;

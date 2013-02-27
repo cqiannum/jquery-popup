@@ -220,7 +220,7 @@
         tpl: {
             overlay: '<div class="popup-overlay"></div>',
             container: '<div class="popup-container"><div class="popup-content"><div class="popup-content-inner"></div></div><div class="popup-controls"></div></div>',
-            iframe: '<iframe id="popup-frame{rnd}" name="popup-frame{rnd}" class="popup-iframe" frameborder="0" vspace="0" hspace="0"' + ($.browser.msie ? ' allowtransparency="true"' : '') + '></iframe>',
+            iframe: '<iframe id="popup-frame{rnd}" name="popup-frame{rnd}" class="popup-iframe" frameborder="0" vspace="0" hspace="0"' + ' allowtransparency="true"' + '></iframe>',
             error: '<p class="popup-error">The requested content cannot be loaded.<br/>Please try again later.</p>',
             loading: '<div class="popup-loading"></div>',
             closeBtn: '<a title="Close" class="popup-controls-close" href="javascript:;"></a>',
@@ -264,6 +264,7 @@
         this.options = options;
         this.current = null;
         this.coming = null;
+        this.direction = null;
 
         function init() {
             dataPool.skin = options.skin || 'skinRimless';
@@ -332,12 +333,13 @@
             //save DOM rel
             this.$overlay = $(tpl.overlay);
             this.$container = $(tpl.container);
+            this.$content = this.$container.find('.popup-content'); 
             this.$inner = this.$container.find('.popup-content-inner');  
-            this.$close = $(tpl.closeBtn);  
+            this.$close = $(tpl.closeBtn).appendTo(this.$container.find('.popup-controls'));  
             this.$loading = $(tpl.loading).css({display:'none'});
 
             this.$container.append(this.$loading);
-            DOM = this.$overlay.add(this.$container,this.$close);
+            DOM = this.$overlay.add(this.$container);
 
             //gallery build
             if (this.isGroup) {
@@ -376,14 +378,16 @@
             //show componnets
             if (this.isGroup) {
                 $.each(comps, function(i, v) {
-                    components[v.name].onReady(self,v.options);
+                    components[v.name] && components[v.name].onReady(self,v.options);
                 });
             }
-            
 
             //get container padding and border from css style
-            this._wp = this.$container.outerWidth() - this.$container.width();
-            this._hp = this.$container.outerHeight() - this.$container.height();
+            this._wp = this.$container.outerWidth() - this.$inner.width();
+            this._hp = this.$container.outerHeight() - this.$inner.height();
+
+            //skin initial
+            skins[dataPool.skin]['init'] && skins[dataPool.skin]['init'](this);
 
             this.$container.trigger('beforeshow.popup');
         },
@@ -412,7 +416,7 @@
 
             // empty content before show another
             this._showLoading();
-            
+
             this._load();
         },
         _load: function() {
@@ -423,8 +427,9 @@
 
             //load componnets content
             $.each(comps, function(i, v) {
-                components[v.name].load && components[v.name].load(self);
+                components[v.name] && components[v.name].load && components[v.name].load(self);
             });
+
         },
         _afterLoad: function() {
             var to,
@@ -434,20 +439,20 @@
                 //set when type load error
                 this._width = current.width;
                 this._height = current.height;
-            }
- 
+            }              
 
+            //for first open 
             if (this.active) {
 
                 // sliderEffect
                 sliderEffects[current.sliderEffect]['init'](this);
             } else {
-                //for first open     
+
                 $(current.content).css({opacity:1});           
                 this.$inner.append(current.content);
                 this._hideLoading();
                 this.resize();
-            }           
+            }     
 
             this.$container.trigger('afterLoad.popup');
 
@@ -472,6 +477,7 @@
             }
 
             this.active = true;
+
         },
         next: function() {
             var index = this.index;
@@ -480,6 +486,7 @@
                 index = 0;
             }
 
+            this.direction = 'next';
             this.show(index);
         },
         prev: function() {
@@ -488,6 +495,7 @@
             if (index < 0) {
                 index = this.total - 1;
             }
+            this.direction = 'prev';
             this.show(index);
         },
         close: function() {
@@ -562,6 +570,7 @@
                     marginLeft: Math.ceil( destWidth / 2 ) *- 1 + Math.ceil( leftSpace / 2 )
                 };
 
+
             if (calculate === true) {
                  return to;
             } else {
@@ -589,6 +598,13 @@
         },
         preload: function() {
             //todo
+        },
+
+        //fast to add css3 style
+        css3Transit: function(style) {
+            var support = ['transition','MozTransition','OTransition','WebkitTransition','msTransition'];
+                
+            
         },
         //add component which is registered to current instance
         addComponent: function(name, options) {  
@@ -677,9 +693,14 @@
                 infoBar: true,
             },
 
+            init: function(instance) {
+                //initial for this skin
+            },
+
             //ajust layout for mobile device
             _mobile: {}
-        }
+        },
+        
     };
 
     var types = {
@@ -709,7 +730,6 @@
                         height: '100.1%',
                     });
 
-                    
                     instance.current.content = img;
                     instance._afterLoad();
 
@@ -760,7 +780,8 @@
             },
             load: function(instance) {
                 var $video,
-                    source, index, type, arr,
+                    index, type, arr,
+                    source = '', 
                     url = instance.url,
                     vhtml5 = instance.current.vhtml5;
 
@@ -783,12 +804,15 @@
                     });
                 }
 
+
+
                 //get videos address from options
                 if (vhtml5.source.length !== 0) {
                     $.each(vhtml5.source, function(i, arr) {
                         source += '<source src="' + arr.src + '" type="' + vhtml5.type[arr.type] + '"></source>';
                     });
                 }
+
                 
                 $(source).appendTo($video);
 
@@ -918,44 +942,84 @@
                 leftSpace = current.leftSpace,
                 opts = $.extend({}, this.defaults, current.sliderSetting);
 
-
             instance.$inner.empty();    
-            rez = $.proxy(instance.resize,instance)(true);    
-             
-            /*
-            // css3 transition
-            instance.$container.css( rez ); 
-            setTimeout(function(){
-                $(current.content).css({opacity:0});
-                instance.$inner.append(current.content); 
-                instance._hideLoading.apply(instance);
-            
-                $(current.content).css({opacity:1});   
-                console.log($(current.content)) 
-            },200); 
-            */
-            
+            rez = $.proxy(instance.resize,instance)(true);  
 
             instance.$container.stop().animate( rez ,{
                 duration: opts.duration,
                 easing: opts.easing,
                 complete: function() {
+
                     instance.$inner.append(current.content); 
                     instance._hideLoading.apply(instance);
                     $(current.content).animate({opacity:1},opts.duration)
-                    //$(current.content).addClass('fadeIn');
+                   
                 }
             });
+
+        
+            // // css3 transition
+            // instance.$container.css( rez ); 
+            // setTimeout(function(){
+            //     $(current.content).css({opacity:0});
+            //     instance.$inner.append(current.content); 
+            //     instance._hideLoading.apply(instance);
+            
+            //     $(current.content).animate({opacity:1},opts.duration)   
+                 
+            // },200); 
+            
         }
     };
 
     //this style need fix dimension of container
     sliderEffects.slide = {
         defaults: {
+            easing:'swing',
             duration: 200
         },
         init: function(instance) {
+            var current   = instance.current,
+                opts = $.extend({}, this.defaults, current.sliderSetting),
+                rez = $.proxy(instance.resize,instance)(true),
+                startPos  = $.extend({},rez),
+                dispear = {opacity: 0},               
+                direction = instance.direction,
+                distance  = 200,
+                field     = 'marginLeft',
+                clone;
+              
+            clone = instance.$container.clone().appendTo($('body'));
+            instance.$container.css({display: 'none'});
 
+            if (direction === 'next') {
+                startPos[field] = startPos[field] + distance + 'px';
+                dispear[field] = '-=' + distance + 'px';
+            } else {
+                startPos[field] = startPos[field] - distance + 'px';
+                dispear[field] = '+=' + distance + 'px';
+            }
+
+            clone.animate(dispear,{
+                duration : 200,
+                easing   : 'linear',
+                complete : function() {
+                    clone.remove();
+                }
+            });   
+           
+            instance._hideLoading();
+            $(current.content).css({opacity:1});
+            instance.$inner.empty().append(current.content);
+            startPos.opacity = 0.1;
+            startPos.display = 'block';
+
+            rez.opacity = 1;
+
+            instance.$container.css(startPos).animate(rez,{
+                duration : opts.duration,
+                easing   : opts.easing
+            });
         }
     };
     
@@ -1113,6 +1177,8 @@ $.Popup.registerComponent('thumbnail',{
         this.$prev = $(tpl.prev);
         this.$next = $(tpl.next);
 
+        //this.$inner.css({position:'absolute',top:0,left:0});
+
         var self = this;
         $.each(this.thumbChunk,function(i,v) {
             $(tpl.item).appendTo(self.$inner);
@@ -1187,15 +1253,23 @@ $.Popup.registerComponent('thumbnail',{
             totalWidth = parseInt($inner.width());
 
         if (direction == 'left') {
+            var leng = left-showWidth <= 0 ? 0: (left-showWidth);
+            console.log(leng)
+
             $inner.css({
                 'left': left-showWidth <= 0 ? 0: (left-showWidth)
             });
         } else {
+            var wid = -(left+showWidth>totalWidth-showWidth ? totalWidth-showWidth:left+showWidth);
+            console.log($inner.css('left'))
+            console.log(showWidth)
+            console.log(totalWidth)
+            console.log(wid)
+
             $inner.css({
                 'left': -(left+showWidth>totalWidth-showWidth ? totalWidth-showWidth:left+showWidth)
             });
         }
-
     },
 
     //main 
@@ -1311,7 +1385,7 @@ $.Popup.registerComponent('infoBar',{
 });
 
 $.Popup.registerSkin('skinSimple',{
-    buttomSpace: 120,
+    buttomSpace: 140,
 
     autoSize: true,
     sliderEffect: 'zoom',
@@ -1320,6 +1394,8 @@ $.Popup.registerSkin('skinSimple',{
         thumbnail: true,
         infoBar: true,
     },
+
+    
 
     //ajust layout for mobile device
     _mobile: {}

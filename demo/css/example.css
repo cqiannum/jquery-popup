@@ -1,4 +1,4 @@
-a.popup img,a.popup-gallery img,a.popup1 img{
+a.popup img,a.popup-gallery img,a.popup1 img,a.popup-slide img{
 	max-width: 150px;
 	max-height: 150px;
 }

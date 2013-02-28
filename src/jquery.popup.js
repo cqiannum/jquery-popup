@@ -128,7 +128,9 @@
         IPHONE: /iphone/.test(NAV),
         IPAD: /ipad/.test(NAV),
         ANDROID: /android/.test(NAV),
-        TOUCH: ('ontouchstart' in doc)
+        TOUCH: ('ontouchstart' in doc),
+
+        MOBILE: /mobile/.test(NAV)
     };
     var slider = {
         timer: {},
@@ -265,6 +267,8 @@
         this.current = null;
         this.coming = null;
         this.direction = null;
+        this.mobile = browser.MOBILE;
+
 
         function init() {
             dataPool.skin = options.skin || 'skinRimless';
@@ -292,8 +296,15 @@
                 alert('you need specific the popup source !');
             }
             
+            if (self.mobile && skin.mobile) {
+                self.current = $.extend(true, {},defaults, skin, skin.mobile, options);
+            } else {
+                self.current = $.extend(true, {},defaults, skin, options);
+            }
             
-            self.current = $.extend(true, {},defaults, skin, options);
+            if (dataPool.content.length >= 2 || self.current.preload === true) {
+                self.isGroup = true;
+            }
            
             //component
             if (skin.components) {
@@ -310,15 +321,38 @@
 
                 });
 
-                self.initialized = true;
+                // do for single item
+                if(!self.isGroup) {
+                    if (skin.single === undefined) {
+                        skin.single = {
+                            buttomSpace: 0,
+                            leftSpace: 0
+                        };
+                    }
+
+
+                    $.extend(self.current,skin.single);
+
+                    if (skin.single.disabled) {
+                        
+                        $.each(dataPool.components,function(i,v) {
+                            if (v === undefined) { 
+                                return ;
+                            }
+                            var disable = $.inArray(v.name,skin.disabled);
+                            if (disable) {
+                                dataPool.components.splice(i,1);
+                            }
+                            console.log(v.name);
+                        });
+                    }
+                }
+                
             }
+            self.initialized = true;
         }
 
-        init();
-
-        if (dataPool.content.length >= 2 || this.current.preload === true) {
-            this.isGroup = true;
-        }
+        init();        
     };
     Popup.prototype = {
         constructor: Popup,
@@ -352,8 +386,8 @@
             }
 
             //show overlay and container from tpl...
-            this.$overlay.addClass(dataPool.skin).css({position:'fixed',display:'none',top:0,left:0,width:'100%',height:'100%',zIndex:99990});
-            this.$container.addClass(dataPool.skin).css({position:'fixed',display:'none',top:'50%',left:'50%',zIndex:99991});
+            this.$overlay.addClass(dataPool.skin).css({position:'fixed',opacity:0,top:0,left:0,width:'100%',height:'100%',zIndex:99990});
+            this.$container.addClass(dataPool.skin).css({position:'fixed',opacity:0,top:'50%',left:'50%',zIndex:99991});
             DOM.appendTo($('body')); 
 
             //bound event
@@ -376,18 +410,19 @@
             transitions[current.transition]['openEffect'](this);   
 
             //show componnets
-            if (this.isGroup) {
-                $.each(comps, function(i, v) {
-                    components[v.name] && components[v.name].onReady(self,v.options);
-                });
-            }
+            $.each(comps, function(i, v) {
+                components[v.name] && components[v.name].onReady(self,v.options);
+            });
+            
 
             //get container padding and border from css style
             this._wp = this.$container.outerWidth() - this.$inner.width();
             this._hp = this.$container.outerHeight() - this.$inner.height();
 
-            //skin initial
-            skins[dataPool.skin]['init'] && skins[dataPool.skin]['init'](this);
+            console.log(this._wp);
+
+            // //skin initial
+            // skins[dataPool.skin]['init'] && skins[dataPool.skin]['init'](this);
 
             this.$container.trigger('beforeshow.popup');
         },
@@ -508,13 +543,14 @@
                 slider.pause(this);
 
             }
+            this.$container.off('.popup');
+
+            keyboard.detach();
             
             //if there's not the transition,use the default           
             transitions[current.transition]['closeEffect'](this); 
                       
-            this.$container.off('.popup');
-
-            keyboard.detach();
+            
             this.active = false;
         },
 
@@ -558,14 +594,14 @@
                 boxHeight = this._height + this._hp;
 
             //calculate
-            var width = Math.min( $win.width()-leftSpace-40, boxWidth ),
-                height = Math.min( $win.height()-buttomSpace-40, boxHeight ),
+            var width = Math.min( $win.width()-leftSpace-20, boxWidth ),
+                height = Math.min( $win.height()-buttomSpace-20, boxHeight ),
                 ratio = Math.min( width / boxWidth, height / boxHeight ),
                 destWidth = Math.round( boxWidth * ratio ),
                 destHeight = Math.round( boxHeight * ratio ),
                 to = {
-                    width: destWidth,
-                    height: destHeight,
+                    width: Math.ceil(destWidth - this._wp),
+                    height: Math.ceil(destHeight - this._hp),
                     marginTop: Math.ceil( destHeight / 2 ) *- 1 - Math.ceil( buttomSpace / 2 ),
                     marginLeft: Math.ceil( destWidth / 2 ) *- 1 + Math.ceil( leftSpace / 2 )
                 };
@@ -600,12 +636,6 @@
             //todo
         },
 
-        //fast to add css3 style
-        css3Transit: function(style) {
-            var support = ['transition','MozTransition','OTransition','WebkitTransition','msTransition'];
-                
-            
-        },
         //add component which is registered to current instance
         addComponent: function(name, options) {  
             var component = {};
@@ -693,12 +723,22 @@
                 infoBar: true,
             },
 
-            init: function(instance) {
-                //initial for this skin
+            //this ajust for single item
+            single: {
+                buttomSpace: 10,
+                leftSpace: 0,
+                disabled: ['thumbnail','infoBar']
             },
 
             //ajust layout for mobile device
-            _mobile: {}
+            mobile: {
+                buttomSpace: 10,
+                leftSpace: 0,
+                components: {
+                    thumbnail: false,
+                    infoBar: true
+                }
+            }
         },
         
     };
@@ -767,7 +807,7 @@
             },
             load: function(instance) {
                 var $inline = $(instance.url).clone().css({
-                    'display': 'block'
+                    'display': 'inline-block' //fix top space issue
                 });
 
                 instance.current.content = $('<div class="popup-inline">').append($inline);
@@ -913,8 +953,8 @@
         openEffect: function(instance) {
             var opts = $.extend({}, this.defaults, instance.current.transitionSetting);
 
-            instance.$overlay.fadeIn(opts.openSpeed);
-            instance.$container.fadeIn(opts.openSpeed);
+            instance.$overlay.animate({opacity:1.0},{duration:opts.openSpeed});
+            instance.$container.animate({opacity:1.0},{duration:opts.openSpeed});
 
         },
         // closeEffect need callback function
@@ -922,7 +962,8 @@
             var opts = $.extend({}, this.defaults, instance.current.transitionSetting);
                        
             instance.$overlay.fadeOut(opts.closeSpeed,function(){instance.$overlay.remove()});            
-            instance.$container.fadeOut(opts.closeSpeed,function(){instance.$container.remove()});         
+            instance.$container.fadeOut(opts.closeSpeed,function(){instance.$container.remove()});  
+
         },
     };
     
@@ -1335,7 +1376,7 @@ $.Popup.registerComponent('thumbnail',{
             $('<img />').load(function() {
                 $items.eq(i).removeClass('thumb-loading').append($(this));
             }).error(function() {
-                $items.ea(i).removeClass('thumb-loading').append($(this));
+                $items.eq(i).removeClass('thumb-loading').append($(this));
             }).attr('src', v);
         });  
 
@@ -1386,6 +1427,7 @@ $.Popup.registerComponent('infoBar',{
 
 $.Popup.registerSkin('skinSimple',{
     buttomSpace: 140,
+    leftSpace: 0,
 
     autoSize: true,
     sliderEffect: 'zoom',
@@ -1395,10 +1437,21 @@ $.Popup.registerSkin('skinSimple',{
         infoBar: true,
     },
 
+    //this ajust for single item
+    single: {
+        buttomSpace: 10,
+        leftSpace: 0,
+        disabled: ['thumbnail']
+    },
     
-
     //ajust layout for mobile device
-    _mobile: {}
+    mobile: {
+        buttomSpace: 0,
+        components: {
+            thumbnail: false,
+            infoBar: true
+        }
+    }
 });
 
 

@@ -27,6 +27,16 @@
   opacity: 0.6;
 }
 
+@media only screen and (max-width: 480px) {
+  .skinSimple .popup-infoBar .popup-count {
+    position: static;
+    float: right;
+    margin-right: 5px;
+    color: #000;
+    background-color: transparent;
+  }
+}
+
 /*====== thumbnails =======*/
 
 .skinSimple .popup-thumbnails {
@@ -169,4 +179,12 @@
 
 .skinSimple.popup-container .skinSimple .popup-controls-close:hover {
   opacity: 1;
+}
+
+@media only screen and (max-width: 480px) {
+  .skinSimple.popup-container .popup-controls-close {
+    top: -10px;
+    right: -10px;
+    opacity: 0.85;
+  }
 }

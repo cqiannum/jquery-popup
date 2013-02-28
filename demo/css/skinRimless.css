@@ -26,6 +26,13 @@
   opacity: 0.8;
 }
 
+@media only screen and (max-width: 480px) {
+  .skinRimless .popup-infoBar .popup-count {
+    position: static;
+    float: right;
+  }
+}
+
 /*====== thumbnails =======*/
 
 .skinRimless .popup-thumbnails {
@@ -110,6 +117,12 @@
 
 .skinRimless .popup-thumbnails .popup-thumbnails-holder a:first-child {
   margin-left: 0;
+}
+
+@media only screen and (max-width: 480px) {
+  .skinRimless .popup-thumbnails {
+    display: none;
+  }
 }
 
 .skinRimless.popup-overlay {
@@ -210,4 +223,11 @@
 
 .skinRimless.popup-container .popup-controls-close:hover {
   opacity: 1;
+}
+
+@media only screen and (max-width: 480px) {
+  .skinRimless.popup-container .popup-controls-close {
+    top: 0;
+    right: 0;
+  }
 }

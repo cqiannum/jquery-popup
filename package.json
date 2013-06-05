@@ -1,12 +1,29 @@
 {
-  "name": "jquery-plugin",
-  "version": "0.0.0-ignored",
-  "engines": {
-    "node": ">= 0.8.0"
+  "name": "popup",
+  "title": "Popup",
+  "description": "A jquery plugin that used to popup a lightbox in the web page.",
+  "version": "0.1.0",
+  "homepage": "https://github.com/amazingSurge/popup",
+  "author": {
+    "name": "amazingSurge",
+    "email": "amazingSurge@yahoo.com",
+    "url": "amazingSurge.com"
   },
-  "scripts": {
-    "test": "grunt qunit"
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:amazingSurge/popup.git"
   },
+  "bugs": "https://github.com/amazingSurge/popup/issues",
+  "licenses": [
+    {
+      "type": "CC",
+      "url": "https://github.com/amazingSurge/popup/blob/master/LICENSE-CC"
+    },
+    {
+      "type": "BY-NC",
+      "url": "https://github.com/amazingSurge/popup/blob/master/LICENSE-BY-NC"
+    }
+  ],
   "devDependencies": {
     "grunt-contrib-jshint": "~0.1.1rc6",
     "grunt-contrib-concat": "~0.1.2rc6",

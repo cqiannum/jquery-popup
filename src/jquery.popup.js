@@ -232,27 +232,32 @@
     };
 
     // Plugin constructor
-    var Popup = $.Popup = function(data, options) {
-        var dataPool;
+    var Popup = $.Popup = function(element, options) {
 
-        var options = options || {},
-            self = this;
+        var self = this;
 
-        //process on arguments
-        var agms = arguments.length;
+        this.element = element;
+        this.$element = $(element);
 
-        // the flag of instance
-        this.initialized = false;
-        this.isGroup = null;
+        // for cache html constructor
+        this.initialized = false;  
+
+        // for gallery
         this.active = false;
+
+        this.isGroup = null;
+
         this.isPaused = null;
+
+        this.$group = null;
+
         //dataPool is a database
         this.dataPool = {
             content: [], //thie could be set by plugin contains: type url info options loaded
-            components: [], //this could be set by skin config
-            skin: ''
+            components: [], //this could be set by theme config
+            theme: ''
         };
-        dataPool = this.dataPool;
+
 
         this.index = 0;
         this.total = 0;
@@ -270,99 +275,65 @@
         this.mobile = browser.MOBILE;
 
 
-        function init() {
-            dataPool.skin = options.skin || 'skinRimless';
-            var skin = skins[dataPool.skin];
-
-            //content
-            if (agms === 2) {
-                if (toString.apply(data) === '[object Object]') {
-                    dataPool.content.push(data);
-                } else if (toString.apply(data) === '[object Array]') {
-                    $.each(data, function(i, v) {
-                        var obj = {};
-                        if (toString.apply(v) === '[object String]') {
-                            obj.type = Util.checkType(v);
-                            obj.url = v;
-                            dataPool.content.push(obj);
-                        }
-                        if (toString.apply(v) === '[object Object]') {
-                            dataPool.content.push(v);
-                        }
-                    });
-                }
-                self.total = dataPool.content.length;
-            } else if (agms === 1 || agms === 0) {
-                alert('you need specific the popup source !');
-            }
-            
-            if (self.mobile && skin.mobile) {
-                self.current = $.extend(true, {},defaults, skin, skin.mobile, options);
-            } else {
-                self.current = $.extend(true, {},defaults, skin, options);
-            }
-            
-            if (dataPool.content.length >= 2 || self.current.preload === true) {
-                self.isGroup = true;
-            }
-           
-            //component
-            if (skin.components) {
-                $.each(skin.components, function(key, value) {
-                    var component = {};
-
-                    if (value !== false) {
-                        component.name = key;
-                        if (toString.apply(value) === '[object Object]') { // component.options could be 'undefined' if not config
-                            component.options = value;
-                        }
-                        dataPool.components.push(component);
-                    }
-
-                });
-
-                // do for single item
-                if(!self.isGroup) {
-                    if (skin.single === undefined) {
-                        skin.single = {
-                            buttomSpace: 0,
-                            leftSpace: 0
-                        };
-                    }
-
-
-                    $.extend(self.current,skin.single);
-
-                    if (skin.single.disabled) {
-                        
-                        $.each(dataPool.components,function(i,v) {
-                            if (v === undefined) { 
-                                return ;
-                            }
-                            var disable = $.inArray(v.name,skin.disabled);
-                            if (disable) {
-                                dataPool.components.splice(i,1);
-                            }
-                            console.log(v.name);
-                        });
-                    }
-                }
-                
-            }
-            self.initialized = true;
-        }
-
-        init();        
+        this.init();        
     };
     Popup.prototype = {
         constructor: Popup,
+
+        themes: {},
+        types: {},
+        transitions: {},
+        effects: {},
+
+        init: function() {
+            var theme, self = this;
+
+            // get theme config
+            this.dataPool.theme = this.options.theme || 'themeRimless';
+            theme = themes[this.dataPool.theme];
+
+            if (this.options.$group && this.options.$group.length > 1) {
+                this.isGroup = true;
+                this.$group = this.options.$group;
+
+                $.each(this.$group, function(i, v) {
+                    var obj = {};
+                    obj.url = $(v).attr('href');
+                    obj.type = Util.checkType(v) || this.options.type;
+                    
+                    self.dataPool.content.push(obj);
+                });
+            }
+
+            if (this.mobile && theme.mobile) {
+                this.options = $.extend(true, {}, Popup.defaults, theme, theme.mobile, this.options);
+            } else {
+                this.options = $.extend(true, {}, Popup.defaults, theme, this.options);
+            }
+           
+            //component
+            if (!this.isGroup && theme.components) {
+                $.each(theme.components, function(key, value) {
+                    var component = {};
+                    if (value !== false) {
+                        component.name = key;
+                        if ($.isPlainObject(value)) { 
+                            component.options = value;
+                        }
+                        self.dataPool.components.push(component);
+                    }
+                });
+            }
+
+            this.initialized = true;
+        },
         _beforeshow: function() {
             var DOM,
                 self = this,
-                current = this.current,
+                options = this.options,
                 dataPool = this.dataPool,
                 comps = dataPool.components,
-                tpl = self.current.tpl;
+                tpl = self.options.tpl;
 
             //save DOM rel
             this.$overlay = $(tpl.overlay);
@@ -375,7 +346,7 @@
             this.$container.append(this.$loading);
             DOM = this.$overlay.add(this.$container);
 
-            //gallery build
+            // gallery build
             if (this.isGroup) {
                 this.$prev = $(tpl.prev);
                 this.$next = $(tpl.next);
@@ -385,17 +356,17 @@
                 this.$next.on('click',$.proxy(this.next,this));
             }
 
-            //show overlay and container from tpl...
-            this.$overlay.addClass(dataPool.skin).css({position:'fixed',opacity:0,top:0,left:0,width:'100%',height:'100%',zIndex:99990});
-            this.$container.addClass(dataPool.skin).css({position:'fixed',opacity:0,top:'50%',left:'50%',zIndex:99991});
+            // show overlay and container from tpl...
+            this.$overlay.addClass(dataPool.theme).css({position:'fixed',opacity:0,top:0,left:0,width:'100%',height:'100%',zIndex:99990});
+            this.$container.addClass(dataPool.theme).css({position:'fixed',opacity:0,top:'50%',left:'50%',zIndex:99991});
             DOM.appendTo($('body')); 
 
-            //bound event
-            if (current.winBtn === true) {
+            // bound event
+            if (options.winBtn === true) {
                 this.$overlay.on('click.popup',$.proxy(this.close,this));
             }
 
-            if (this.isGroup ===true && current.keyboard ===true) {
+            if (this.isGroup ===true && options.keyboard ===true) {
                 keyboard.attach({
                     escape: $.proxy(this.close,this),
                     left: $.proxy(this.prev,this),
@@ -407,22 +378,22 @@
             $win.on('resize',$.proxy(this._resize,this));    
 
             // transitions
-            transitions[current.transition]['openEffect'](this);   
-
+            if (this.css3Transition === true) {
+                this.$overlay.addClass(options.transition);
+            } else {
+                transitions[options.transition]['openEffect'](this);   
+            }
+            
             //show componnets
             $.each(comps, function(i, v) {
-                components[v.name] && components[v.name].onReady(self,v.options);
-            });
-            
+                if (self.components[v.name]) {
+                    self.components[v.name].onReady(self, v.options);
+                }
+            });           
 
             //get container padding and border from css style
             this._wp = this.$container.outerWidth() - this.$inner.width();
             this._hp = this.$container.outerHeight() - this.$inner.height();
-
-            console.log(this._wp);
-
-            // //skin initial
-            // skins[dataPool.skin]['init'] && skins[dataPool.skin]['init'](this);
 
             this.$container.trigger('beforeshow.popup');
         },
@@ -440,11 +411,13 @@
 
             if (this.active === false) {
                 this._beforeshow();
+            } else {
+                this.active = true;
             }  
 
             //load content options
             if (data.options) { 
-                this.current = $.extend(true,this.current,data.options);
+                this.current = $.extend(true, {}, this.options, data.options);
             }
             
             this.$container.trigger('change.popup');
@@ -523,7 +496,7 @@
 
             this.direction = 'next';
             this.show(index);
-        },
+        }, 
         prev: function() {
             var index = this.index;
             index--;
@@ -548,8 +521,9 @@
             keyboard.detach();
             
             //if there's not the transition,use the default           
-            transitions[current.transition]['closeEffect'](this); 
-                      
+            if (!this.css3Transition) {
+                this.transitions[current.transition]['closeEffect'](this);
+            }                      
             
             this.active = false;
         },
@@ -652,11 +626,11 @@
                 };
             }           
         },
-        registerSkin: function(name,options) {
-            if (skins[name]) {
-                alert('this skin is registered !');
+        registertheme: function(name,options) {
+            if (themes[name]) {
+                alert('this theme is registered !');
             } else {
-                skins[name] = options;
+                themes[name] = options;
             }
         },
         registerComponent: function(name, options) {
@@ -669,9 +643,9 @@
     //  below object contains basic method and defaults for extending effect.
     //
     
-    var skins = {
+    var themes = {
         defaults: {},
-        skinRimless: {
+        themeRimless: {
             buttomSpace: 120,
 
             autoSize: true,
@@ -680,13 +654,6 @@
             components: {
                 thumbnail: true,
                 infoBar: true,
-            },
-
-            //this ajust for single item
-            single: {
-                buttomSpace: 10,
-                leftSpace: 0,
-                disabled: ['thumbnail','infoBar']
             },
 
             //ajust layout for mobile device
@@ -698,8 +665,7 @@
                     infoBar: true
                 }
             }
-        },
-        
+        },        
     };
 
     var types = {
@@ -1384,7 +1350,7 @@ $.Popup.registerComponent('infoBar',{
     close: function(){}
 });
 
-$.Popup.registerSkin('skinSimple',{
+$.Popup.registertheme('themeSimple',{
     buttomSpace: 140,
     leftSpace: 0,
 
@@ -1615,9 +1581,9 @@ $.Popup.registerType('map',{
     }
 });
 
-//register skin
+//register theme
 
-$Popup.registerSkin('skinSimple',{
+$Popup.registertheme('themeSimple',{
     holderWidth: 20,
     holderHeight: 120,
 
@@ -1670,7 +1636,7 @@ $.Popup.registerComponent('counter',{
         }
 
         //
-        // css doesnt set here, set in css file in skin
+        // css doesnt set here, set in css file in theme
         //
 
         $(instance).on('change.popup',function() {

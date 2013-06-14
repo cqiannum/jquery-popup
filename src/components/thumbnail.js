@@ -2,6 +2,7 @@
 //register thumbnail
 (function(){
 	$.Popup.registerComponent('thumbnail',{
+		
 	    defaults: {
 	        count: 5,
 	        unitWidth: 80,

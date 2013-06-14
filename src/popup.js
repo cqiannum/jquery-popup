@@ -27,42 +27,7 @@
         } while ( all[0] );
         return v > 4 ? v : undefined;
     }());
-    var Util = {
-        checkType: function(url) {
-            var result = '',
-                type = ['image','iframe','ajax','inline','swf','vhtml5'];
 
-            $.each(type,function(i,v) {
-
-                if (types[v].match) {
-                    
-                    if (types[v].match(url)) {
-                        result = v;
-                        return ;
-                    }
-                }
-            });
-
-            return result;
-        },
-
-        // parse anything into a number
-        parseValue: function(val) {
-            if (typeof val === 'number') {
-                return val;
-            } else if (typeof val === 'string') {
-                var arr = val.match(/\-?\d|\./g);
-                return arr && arr.constructor === Array ? arr.join('') * 1 : 0;
-            } else {
-                return 0;
-            }
-        },
-        //check if the needed files have been loaded
-        checkFile: function() {},
-        loadfail: function(type) { // error process, image ajax iframe vhtml5
-
-        }
-    };
     var keyboard = {
         keys : {
             'UP': 38,
@@ -132,107 +97,9 @@
 
         MOBILE: /mobile/.test(NAV)
     };
-    var slider = {
-        timer: {},
-        clear: function() {
-            clearTimeout(this.timer);
-        },
-        set: function(instance) {
-            this.clear();
-            if (instance.isGroup) {
-                this.timer = setTimeout($.proxy(instance.next,instance),instance.current.playSpeed);
-            }  
-        },
-        play: function(instance) {
-            instance.isPaused = false;
-            this.set(instance);
-        },
-        pause: function(instance) {
-            this.clear();
-            instance.current.isPaused = true;
-        }
-    };
-    var defaults = {
-        width: 760,
-        height: 428,
-        
-        buttomSpace: 0,
-        leftSpace: 0,
-
-        autoSize: true,
-        closeBtn: true,
-        winBtn: true,   //click overlay to close popup
-        keyboard: true,
-
-        autoPlay: false,
-        playSpeed: 2000,
-        hoverPause: true,
-
-        preload: false,
-
-        transition: 'fade',
-        transitionSetting: {},
-        sliderEffect: 'zoom',
-        sliderSetting: {},
-
-        //ajax config
-        selector: null,
-        ajax: {
-            dataType: 'html',
-            headers  : { 'popup': true } 
-        },
-
-        //swf config
-        swf: {
-            allowscriptaccess: 'always',
-            allowfullscreen: 'true',
-            wmode: 'transparent',
-        },
-
-        //vhtml5 config
-        vhtml5: {
-            width: "100%",
-            height: "100%",
-
-            preload: "load",
-            controls: "controls",
-            poster: '',
-            
-            type: {
-                mp4: "video/mp4",
-                webm: "video/webm",
-                ogg: "video/ogg",
-            },
-            source: [
-                // {
-                //     src: 'video/movie.mp4',
-                //     type: 'mp4', // mpc,webm,ogv
-                // },
-                // {
-                //     src: 'video/movie.webm',
-                //     type: 'webm',
-                // },
-                // {
-                //     src: 'video/movie.ogg',
-                //     type: 'ogg',
-                // }
-            ],
-        },
-
-        tpl: {
-            overlay: '<div class="popup-overlay"></div>',
-            container: '<div class="popup-container"><div class="popup-content"><div class="popup-content-inner"></div></div><div class="popup-controls"></div></div>',
-            iframe: '<iframe id="popup-frame{rnd}" name="popup-frame{rnd}" class="popup-iframe" frameborder="0" vspace="0" hspace="0"' + ' allowtransparency="true"' + '></iframe>',
-            error: '<p class="popup-error">The requested content cannot be loaded.<br/>Please try again later.</p>',
-            loading: '<div class="popup-loading"></div>',
-            closeBtn: '<a title="Close" class="popup-controls-close" href="javascript:;"></a>',
-            next: '<a title="Next" class="popup-controls-next" href="javascript:;"><span></span></a>',
-            prev: '<a title="Previous" class="popup-controls-prev" href="javascript:;"><span></span></a>'
-        }
-    };
 
     // Plugin constructor
-    var Popup = $.Popup = function(element, options) {
+    var Popup = $.popup = function(element, options) {
 
         var self = this;
 
@@ -251,13 +118,10 @@
 
         this.$group = null;
 
-        //dataPool is a database
         this.dataPool = {
-            content: [], //thie could be set by plugin contains: type url info options loaded
-            components: [], //this could be set by theme config
-            theme: ''
+            theme: '',
+            content: []
         };
-
 
         this.index = 0;
         this.total = 0;
@@ -270,10 +134,7 @@
 
         this.options = options;
         this.current = null;
-        this.coming = null;
-        this.direction = null;
         this.mobile = browser.MOBILE;
-
 
         this.init();        
     };
@@ -290,20 +151,8 @@
 
             // get theme config
             this.dataPool.theme = this.options.theme || 'themeRimless';
-            theme = themes[this.dataPool.theme];
+            theme = this.themes[this.dataPool.theme];
 
-            if (this.options.$group && this.options.$group.length > 1) {
-                this.isGroup = true;
-                this.$group = this.options.$group;
-
-                $.each(this.$group, function(i, v) {
-                    var obj = {};
-                    obj.url = $(v).attr('href');
-                    obj.type = Util.checkType(v) || this.options.type;
-                    
-                    self.dataPool.content.push(obj);
-                });
-            }
 
             if (this.mobile && theme.mobile) {
                 this.options = $.extend(true, {}, Popup.defaults, theme, theme.mobile, this.options);
@@ -311,23 +160,71 @@
                 this.options = $.extend(true, {}, Popup.defaults, theme, this.options);
             }
            
-            //component
-            if (!this.isGroup && theme.components) {
-                $.each(theme.components, function(key, value) {
-                    var component = {};
-                    if (value !== false) {
-                        component.name = key;
-                        if ($.isPlainObject(value)) { 
-                            component.options = value;
-                        }
-                        self.dataPool.components.push(component);
+            // //component
+            // if (!this.isGroup && theme.components) {
+            //     $.each(theme.components, function(key, value) {
+            //         var component = {};
+            //         if (value !== false) {
+            //             component.name = key;
+            //             if ($.isPlainObject(value)) { 
+            //                 component.options = value;
+            //             }
+            //             self.dataPool.components.push(component);
+            //         }
+            //     });
+            // }
+
+            this.$element.on('click', function() {
+                var metas = {}, group, index;
+                metas.group = $(this).data('popup-group');
+                $.each($(this).data(), function(k, v) {
+                    if (/^popup/i.test(k)) {
+                        metas[k.toLowerCase().replace(/^popup/i, '')] = v;
                     }
+                });  
+
+                group = self.filter(function() {
+                    var data = $(this).data('popup-group');
+                    if (metas.group) {
+                        return data === metas.group;
+                    }
+                }); 
+
+                if (group === null) {
+                    group = this;
+                } 
+
+                $.each(group, function(i, v) {
+                    var obj = {}, metas = {};
+                    obj.url = $(v).attr('href');
+                    obj.type = self.checkType(v) || this.options.type;
+
+                    $.each($(v).data(), function(k, v) {
+                        if (/^popup/i.test(k)) {
+                            metas[k.toLowerCase().replace(/^popup/i, '')] = v;
+                        }
+                    });
+
+                    obj.options = metas;
+                    
+                    self.dataPool.content.push(obj);
                 });
-            }
+
+                index = $(group).index(this);
+                self.target = this;
+
+                if (group.length > 1) {
+                    self.isGroup = true;
+                }
+
+                self.show(index); 
+
+                return false;
+            });
 
             this.initialized = true;
         },
-        _beforeshow: function() {
+        beforeshow: function() {
             var DOM,
                 self = this,
                 options = this.options,
@@ -410,7 +307,7 @@
             this.url = data.url;
 
             if (this.active === false) {
-                this._beforeshow();
+                this.beforeshow();
             } else {
                 this.active = true;
             }  
@@ -423,23 +320,44 @@
             this.$container.trigger('change.popup');
 
             // empty content before show another
-            this._showLoading();
+            this.showLoading();
 
-            this._load();
+            this.load();
         },
-        _load: function() {
+        load: function() {
             var self = this,
                 comps = this.dataPool.components;
 
-            types[this.type].load(this);
+            this.themes[this.theme].load(this);
 
             //load componnets content
             $.each(comps, function(i, v) {
-                components[v.name] && components[v.name].load && components[v.name].load(self);
+                if (self.components[v.name] && $.type(self.components[v.name].load) === 'fucntion') {
+                    self.components[v.name].load(self);
+                } else {
+                    throw new Error('components load fails !');
+                }
+            });
+        },
+
+        checkType: function(url) {
+            var result = '',
+                self = this,
+                type = ['image','iframe','ajax','inline','swf','vhtml5'];
+
+            $.each(type,function(i,v) {
+                if (self.types[v].match) {
+                    if (self.types[v].match(url)) {
+                        result = v;
+                        return ;
+                    }
+                }
             });
 
+            return result;
         },
-        _afterLoad: function() {
+
+        afterLoad: function() {
             var to,
                 current = this.current;
 
@@ -458,7 +376,7 @@
 
                 $(current.content).css({opacity:1});           
                 this.$inner.append(current.content);
-                this._hideLoading();
+                this.hideLoading();
                 this.resize();
             }     
 
@@ -474,18 +392,15 @@
                     });
                     this.$container.on('mouseleave.popup',function(){
                         slider.play(self);
-                    })
+                    });
                 }
             }
 
-            if (current.preload === true) {
+            // if (current.preload === true) {
 
-                //todo: this excute prload function
-                this.preload();
-            }
-
-            this.active = true;
-
+            //     //todo: this excute prload function
+            //     this.preload();
+            // }
         },
         next: function() {
             var index = this.index;
@@ -505,6 +420,9 @@
             }
             this.direction = 'prev';
             this.show(index);
+        },
+        cancel: function() {
+            this.hideLoading();
         },
         close: function() {
             var current = this.current;
@@ -534,10 +452,6 @@
             }
             this.initialized = false;
         },
-        _update: function() {
-            this.total = this.dataPool.content.length;
-        },
-
 
         //if calculate === true , not set container, just return a result
         resize: function(calculate) { 
@@ -580,16 +494,16 @@
             resizeTimer = setTimeout($.proxy(this.resize,this), 10);
         },
 
-        _hideLoading: function() {
+        hideLoading: function() {
             this.$loading.css({display:'none'});
         },
 
-        _showLoading: function() {
+        showLoading: function() {
             this.$loading.css({display:'block'});
-        },
-        preload: function() {
-            //todo
         }
+        // preload: function() {
+        //     //todo
+        // }
     };
 
     //static method for the page
@@ -597,14 +511,93 @@
     $.extend(Popup, {
 
         //for plugin to get outside data
-        run: function(selector,options) {
-            $(selector).Popup(options);
+        defaults: {
+            width: 760,
+            height: 428,
+            
+            buttomSpace: 0,
+            leftSpace: 0,
+
+            autoSize: true,
+            closeBtn: true,
+            winBtn: true,   //click overlay to close popup
+            keyboard: true,
+
+            autoPlay: false,
+            playSpeed: 2000,
+            hoverPause: true,
+
+            preload: false,
+
+            transition: 'fade',
+            transitionSetting: {},
+            sliderEffect: 'zoom',
+            sliderSetting: {},
+
+            //ajax config
+            selector: null,
+            ajax: {
+                dataType: 'html',
+                headers  : { 'popup': true } 
+            },
+
+            //swf config
+            swf: {
+                allowscriptaccess: 'always',
+                allowfullscreen: 'true',
+                wmode: 'transparent'
+            },
+
+            //vhtml5 config
+            vhtml5: {
+                width: "100%",
+                height: "100%",
+
+                preload: "load",
+                controls: "controls",
+                poster: '',
+                
+                type: {
+                    mp4: "video/mp4",
+                    webm: "video/webm",
+                    ogg: "video/ogg"
+                },
+                source: [
+                    // {
+                    //     src: 'video/movie.mp4',
+                    //     type: 'mp4', // mpc,webm,ogv
+                    // },
+                    // {
+                    //     src: 'video/movie.webm',
+                    //     type: 'webm',
+                    // },
+                    // {
+                    //     src: 'video/movie.ogg',
+                    //     type: 'ogg',
+                    // }
+                ]
+            },
+
+            tpl: {
+                overlay: '<div class="popup-overlay"></div>',
+                container: '<div class="popup-container"><div class="popup-content"><div class="popup-content-inner"></div></div><div class="popup-controls"></div></div>',
+                iframe: '<iframe id="popup-frame{rnd}" name="popup-frame{rnd}" class="popup-iframe" frameborder="0" vspace="0" hspace="0"' + ' allowtransparency="true"' + '></iframe>',
+                error: '<p class="popup-error">The requested content cannot be loaded.<br/>Please try again later.</p>',
+                loading: '<div class="popup-loading"></div>',
+                closeBtn: '<a title="Close" class="popup-controls-close" href="javascript:;"></a>',
+                next: '<a title="Next" class="popup-controls-next" href="javascript:;"><span></span></a>',
+                prev: '<a title="Previous" class="popup-controls-prev" href="javascript:;"><span></span></a>'
+            }
         },
         
         // registered type cant be auto matched , it need manually add 
         registerType: function(name, options) {
+            var types = Popup.prototype.types;
+
             //forbid to register a exist type
-            if (types[name]) { return ''; }
+            if (types[name]) { 
+                throw new Error('this Type has registered, please use another name. '); 
+            }
 
             types[name] = {};
             
@@ -616,7 +609,9 @@
             if (types[name].load) {
                 types[name].load = function(instance) {
                     //init before load
-                    options.init && options.init(instance);
+                    if ($.type(options.init) === 'function') {
+                        options.init(instance);
+                    }
 
                     if (options.extends) {
                         types[options.extends].load(instance);
@@ -627,15 +622,17 @@
             }           
         },
         registertheme: function(name,options) {
-            if (themes[name]) {
-                alert('this theme is registered !');
+            if (Popup.prototype.themes[name]) {
+                throw new Error('this theme is registered !');
             } else {
-                themes[name] = options;
+                Popup.prototype.themes[name] = options;
             }
         },
         registerComponent: function(name, options) {
-            if(components[name]) { return }
-            components[name] = options;
+            if(Popup.prototype.components[name]) { 
+                throw new Error('this component is registered !');
+            }
+            Popup.prototype.components[name] = options;
         }
     });
 
@@ -643,7 +640,7 @@
     //  below object contains basic method and defaults for extending effect.
     //
     
-    var themes = {
+    Popup.prototype.themes = {
         defaults: {},
         themeRimless: {
             buttomSpace: 120,
@@ -653,7 +650,7 @@
 
             components: {
                 thumbnail: true,
-                infoBar: true,
+                infoBar: true
             },
 
             //ajust layout for mobile device
@@ -665,10 +662,10 @@
                     infoBar: true
                 }
             }
-        },        
+        }        
     };
 
-    var types = {
+    Popup.prototype.types = {
         image: {
             match: function(url) {
                 return url.match(/\.(png|PNG|jpg|JPG|jpeg|JPEG|gif|GIF)$/i);
@@ -696,7 +693,7 @@
                     });
 
                     instance.current.content = img;
-                    instance._afterLoad();
+                    instance.afterLoad();
 
                 };
 
@@ -706,11 +703,11 @@
                     alert('error')
 
                     instance.current.content = Util.loadfail('image');
-                    instance._afterLoad();
+                    instance.afterLoad();
                 };
 
                 if (img.complete === undefined || !img.complete) {
-                    instance._showLoading();
+                    instance.showLoading();
                 }
 
                 img.src = instance.url;
@@ -736,7 +733,7 @@
                 });
 
                 instance.current.content = $('<div class="popup-inline">').append($inline);
-                instance._afterLoad();
+                instance.afterLoad();
             }
         },
         vhtml5: {
@@ -783,7 +780,7 @@
 
                 instance.current.content = $video;
 
-                instance._afterLoad();
+                instance.afterLoad();
             }
         },
         swf: {
@@ -809,7 +806,7 @@
 
                 instance.current.content = $object;
 
-                instance._afterLoad();
+                instance.afterLoad();
             }
         },
         //you should set type when using iframe && ajax,they cant auto match, 
@@ -831,7 +828,7 @@
                 }).attr('src', instance.url);
 
                 instance.current.content = $iframe;
-                instance._afterLoad();
+                instance.afterLoad();
             }
         },
         ajax: {
@@ -841,11 +838,11 @@
                 $.ajax($.extend({}, current.ajax, {
                     url: instance.url,
                     error: function() {
-                        Util._loadfail('ajax');
+                        Util.loadfail('ajax');
                     },
                     success: function(data, textStatus) {
                         if (textStatus === 'success') {
-                            instance._hideLoading();
+                            instance.hideLoading();
 
                             // proceed data
                             if (current.selector) {
@@ -857,7 +854,7 @@
                             current.content = content;
 
 
-                            instance._afterLoad();
+                            instance.afterLoad();
                         }
                     }
                 }));
@@ -865,246 +862,171 @@
         }
     };
 
+    Popup.prototype.transitions = {
+        fade: {
+            defaults: {
+                openSpeed: 500,
+                closeSpeed: 500
+            },
+            openEffect: function(instance, callback) {
+                var opts = $.extend({}, this.defaults, instance.current.transitionSetting);
 
-    //transitions
-    
-    var transitions = {};
+                instance.$overlay.animate({opacity:1.0},{duration:opts.openSpeed});
+                instance.$container.animate({opacity:1.0},{duration:opts.openSpeed});
 
-    transitions.fade = {
-        defaults: {
-            openSpeed: 500,
-            closeSpeed: 500,
-        },
-        openEffect: function(instance) {
-            var opts = $.extend({}, this.defaults, instance.current.transitionSetting);
+            },
+            // closeEffect need callback function
+            closeEffect: function(instance, callback) {
+                var opts = $.extend({}, this.defaults, instance.current.transitionSetting);
+                
+                // callback = function(){instance.$container.remove()      
+                instance.$overlay.fadeOut(opts.closeSpeed, callback);            
+                instance.$container.fadeOut(opts.closeSpeed, callback);  
 
-            instance.$overlay.animate({opacity:1.0},{duration:opts.openSpeed});
-            instance.$container.animate({opacity:1.0},{duration:opts.openSpeed});
-
-        },
-        // closeEffect need callback function
-        closeEffect: function(instance) {
-            var opts = $.extend({}, this.defaults, instance.current.transitionSetting);
-                       
-            instance.$overlay.fadeOut(opts.closeSpeed,function(){instance.$overlay.remove()});            
-            instance.$container.fadeOut(opts.closeSpeed,function(){instance.$container.remove()});  
-
-        },
-    };
-    
-    //slider
-
-    var sliderEffects = {};
-
-    sliderEffects.zoom = {
-        defaults: {
-            duration: 200,
-            easing: 'linear',
-        },
-        init: function(instance) {
-            var rez,
-                current = instance.current,
-                buttomSpace = current.buttomSpace,
-                leftSpace = current.leftSpace,
-                opts = $.extend({}, this.defaults, current.sliderSetting);
-
-            instance.$inner.empty();    
-            rez = $.proxy(instance.resize,instance)(true);  
-
-            instance.$container.stop().animate( rez ,{
-                duration: opts.duration,
-                easing: opts.easing,
-                complete: function() {
-
-                    instance.$inner.append(current.content); 
-                    instance._hideLoading.apply(instance);
-                    $(current.content).animate({opacity:1},opts.duration)
-                   
-                }
-            });
-
-        
-            // // css3 transition
-            // instance.$container.css( rez ); 
-            // setTimeout(function(){
-            //     $(current.content).css({opacity:0});
-            //     instance.$inner.append(current.content); 
-            //     instance._hideLoading.apply(instance);
-            
-            //     $(current.content).animate({opacity:1},opts.duration)   
-                 
-            // },200); 
-            
-        }
-    };
-
-    //this style need fix dimension of container
-    sliderEffects.slide = {
-        defaults: {
-            easing:'swing',
-            duration: 200
-        },
-        init: function(instance) {
-            var current   = instance.current,
-                opts = $.extend({}, this.defaults, current.sliderSetting),
-                rez = $.proxy(instance.resize,instance)(true),
-                startPos  = $.extend({},rez),
-                dispear = {opacity: 0},               
-                direction = instance.direction,
-                distance  = 200,
-                field     = 'marginLeft',
-                clone;
-              
-            clone = instance.$container.clone().appendTo($('body'));
-            instance.$container.css({display: 'none'});
-
-            if (direction === 'next') {
-                startPos[field] = startPos[field] + distance + 'px';
-                dispear[field] = '-=' + distance + 'px';
-            } else {
-                startPos[field] = startPos[field] - distance + 'px';
-                dispear[field] = '+=' + distance + 'px';
             }
-
-            clone.animate(dispear,{
-                duration : 200,
-                easing   : 'linear',
-                complete : function() {
-                    clone.remove();
-                }
-            });   
-           
-            instance._hideLoading();
-            $(current.content).css({opacity:1});
-            instance.$inner.empty().append(current.content);
-            startPos.opacity = 0.1;
-            startPos.display = 'block';
-
-            rez.opacity = 1;
-
-            instance.$container.css(startPos).animate(rez,{
-                duration : opts.duration,
-                easing   : opts.easing
-            });
         }
     };
-    
-    //components 
 
-    var components = {};  
+    Popup.prototype.effects = {
+        zoom: {
+            defaults: {
+                duration: 200,
+                easing: 'linear'
+            },
+            init: function(instance, callback) {
+                var rez,
+                    current = instance.current,
+                    buttomSpace = current.buttomSpace,
+                    leftSpace = current.leftSpace,
+                    opts = $.extend({}, this.defaults, current.sliderSetting);
+
+                instance.$inner.empty();    
+                rez = $.proxy(instance.resize,instance)(true);  
+
+                instance.$container.stop().animate( rez ,{
+                    duration: opts.duration,
+                    easing: opts.easing,
+                    complete: function() {
+                        instance.$inner.append(current.content); 
+                        instance.hideLoading.apply(instance);
+                        $(current.content).animate({opacity:1},opts.duration);
+                       
+                    }
+                });
+
+            
+                // // css3 transition
+                // instance.$container.css( rez ); 
+                // setTimeout(function(){
+                //     $(current.content).css({opacity:0});
+                //     instance.$inner.append(current.content); 
+                //     instance.hideLoading.apply(instance);
+                
+                //     $(current.content).animate({opacity:1},opts.duration)   
+                     
+                // },200); 
+                
+            }
+        },
+        slide: {
+            defaults: {
+                easing:'swing',
+                duration: 200
+            },
+            init: function(instance) {
+                var current   = instance.current,
+                    opts = $.extend({}, this.defaults, current.sliderSetting),
+                    rez = $.proxy(instance.resize,instance)(true),
+                    startPos  = $.extend({},rez),
+                    dispear = {opacity: 0},               
+                    direction = instance.direction,
+                    distance  = 200,
+                    field     = 'marginLeft',
+                    clone;
+                  
+                clone = instance.$container.clone().appendTo($('body'));
+                instance.$container.css({display: 'none'});
+
+                if (direction === 'next') {
+                    startPos[field] = startPos[field] + distance + 'px';
+                    dispear[field] = '-=' + distance + 'px';
+                } else {
+                    startPos[field] = startPos[field] - distance + 'px';
+                    dispear[field] = '+=' + distance + 'px';
+                }
+
+                clone.animate(dispear,{
+                    duration : 200,
+                    easing   : 'linear',
+                    complete : function() {
+                        clone.remove();
+                    }
+                });   
+               
+                instance.hideLoading();
+                $(current.content).css({opacity:1});
+                instance.$inner.empty().append(current.content);
+                startPos.opacity = 0.1;
+                startPos.display = 'block';
+
+                rez.opacity = 1;
+
+                instance.$container.css(startPos).animate(rez,{
+                    duration : opts.duration,
+                    easing   : opts.easing
+                });
+            }
+        }
+    };
+
+    Popup.prototype.silder = {
+        timer: {},
+        clear: function() {
+            clearTimeout(this.timer);
+        },
+        set: function(instance) {
+            this.clear();
+            if (instance.isGroup) {
+                this.timer = setTimeout($.proxy(instance.next,instance),instance.current.playSpeed);
+            }  
+        },
+        play: function(instance) {
+            instance.isPaused = false;
+            this.set(instance);
+        },
+        pause: function(instance) {
+            this.clear();
+            instance.current.isPaused = true;
+        }
+    };
+
 
     // jQuery plugin initialization 
     $.fn.Popup = function(options) {
-        var self = this;
-
         if (typeof options === 'string') {
-            var api = $(this)[0].data('popup'),
-                method = options;
+            var method = options;
+            var method_arguments = arguments.length > 1 ? Array.prototype.slice.call(arguments, 1) : undefined;
 
-            //return when there is not elems
-            if (api.length === 0) {
-                return ;
-            }
-                
-            switch (method) {
-                case 'show':
-                    api.show();
-                    break;
-                case 'close':
-                    api.close();
-                    break;
-                case 'enable':
-                    api.enable();
-                    break;
-                case 'disable':
-                    api.disable();
-                    break;
-            }
-        }
-
-        function run(instance) {
-            var start;
-            $(instance).on('click.popup', function(e) {
-                var index,group = {},
-                    data = [], metas = {};
-                
-                //get user options on DOM protperties and store them on metas object
-                $.each($(instance).data(), function(k, v) {
-                    if (/^popup/i.test(k)) {
-                        metas[k.toLowerCase().replace(/^popup/i, '')] = v;
-                    }
-                });    
-
-                //filter the same popup-group name with the current click element as a group
-                group = self.filter(function() {
-                    var data = $(this).data('popup-group');
-                    if (metas.group) {
-                        return data === metas.group;
-                    }
-                });  
-
-
-                if (group.length === 0) {
-                    group = this;
-                    data.push({
-                        url: $(this).attr('href'),
-                        type: Util.checkType($(this).attr('href')),
-                        options: metas
-                    });
-
-                } else {
-                    $.each(group, function(i, el) {
-                        var url = $(el).attr('href'),
-                            source = {},
-                            metas = {};
-
-                        // if doesnot have src property, ignore the element
-                        if (url) {
-                            source.url = url;
-                            source.type = Util.checkType(url);
-                        } else {
-                            alert('cant find url in the element');
-                        }
-
-                        //get user options on DOM protperties and store them on metas object
-                        $.each($(el).data(), function(k, v) {
-                            if (/^popup/i.test(k)) {
-                                metas[k.toLowerCase().replace(/^popup/i, '')] = v;
-                            }
-                        });
-
-                        source.options = metas;
-                        data.push(source);
-                    });
+            return this.each(function() {
+                var api = $.data(this, 'popup');
+                if (typeof api[method] === 'function') {
+                    api[method].apply(api, method_arguments);
                 }
-
-                index = $(group).index(instance); 
-
-                start = new Popup(data, options);
-                start.elems = group;
-                start.target = this;
-
-                if ( group.length >= 2 ) {
-                    start.isGroup = true;
-                }
-
-                start.show(index);
-
-                return false;
             });
-            return start;
-        }      
-
-        return self.each(function() {
-            if (!$.data(self, 'popup')) {
-                $.data(self, 'popup', run(this));
-            }
-        });
+        } else {
+            var opts = options || {};
+            opts.$group = this;
+            return this.each(function() {
+                if (!$.data(this, 'popup')) {
+                    $.data(this, 'popup', new Popup(this, opts));
+                }
+            });
+        }
     };
 
 })(jQuery, document, window);
 
-$.Popup.registerComponent('thumbnail',{
+$.popup.registerComponent('thumbnail',{
     defaults: {
         count: 5,
         unitWidth: 80,
@@ -1294,7 +1216,7 @@ $.Popup.registerComponent('thumbnail',{
         });
         instance.$container.on('close.popup',$.proxy(self.close,self));
     },
-    _load: function(instance) {
+    load: function(instance) {
         var $items = this.$holder.find('a');
        
         $.each(this.thumbChunk,function(i,v) {
@@ -1309,7 +1231,7 @@ $.Popup.registerComponent('thumbnail',{
     },
     load: function(instance) {
         if (this.loaded != true) {
-            this._load(instance);
+            this.load(instance);
         }
     },
     close: function(){
@@ -1322,7 +1244,7 @@ $.Popup.registerComponent('thumbnail',{
     }
 });
 
-$.Popup.registerComponent('infoBar',{
+$.popup.registerComponent('infoBar',{
     defaults: {
         tpl: {
             wrap: '<div class="popup-infoBar"></div>',
@@ -1350,7 +1272,7 @@ $.Popup.registerComponent('infoBar',{
     close: function(){}
 });
 
-$.Popup.registertheme('themeSimple',{
+$.popup.registertheme('themeSimple',{
     buttomSpace: 140,
     leftSpace: 0,
 

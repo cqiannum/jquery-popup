@@ -9,13 +9,15 @@ $.Popup.registerComponent('infoBar',{
         }
     },
     opts: {},
-    onReady: function(instance,options) {
+    init: function(instance,options) {
         var opts = $.extend(true,this.opts,this.defaults,options),
             tpl = opts.tpl;
 
         this.$title = $(tpl.title);
         this.$count = $(tpl.count);
         this.$wrap = $(tpl.wrap).append(this.$title).append(this.$count).appendTo(instance.$container);
+
+        instance.$container.on('change.popup', $.proxy(this.load, this));
     },
     load: function(instance) {
 

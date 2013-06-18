@@ -1,8 +1,7 @@
 
 //register thumbnail
 (function(){
-	$.Popup.registerComponent('thumbnail',{
-		
+	$.Popup.registerComponent('thumbnail',{		
 	    defaults: {
 	        count: 5,
 	        unitWidth: 80,
@@ -127,7 +126,7 @@
 	    },
 
 	    //main 
-	    onReady: function(instance,options) {
+	    init: function(instance,options) {
 	        var $items,
 	            self = this,
 	            chunks = [],

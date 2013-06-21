@@ -5,7 +5,7 @@ module.exports = function(grunt) {
     // Project configuration.
     grunt.initConfig({
         // Metadata.
-        pkg: grunt.file.readJSON('popup.jquery.json'),
+        pkg: grunt.file.readJSON('package.json'),
         banner: '/*! <%= pkg.title || pkg.name %> - v<%= pkg.version %> - ' + '<%= grunt.template.today("yyyy-mm-dd") %>\n' + '<%= pkg.homepage ? "* " + pkg.homepage + "\\n" : "" %>' + '* Copyright (c) <%= grunt.template.today("yyyy") %> <%= pkg.author.name %>;' + ' Licensed <%= _.pluck(pkg.licenses, "type").join(", ") %> */\n',
         // Task configuration.
         clean: {
@@ -85,8 +85,8 @@ module.exports = function(grunt) {
         },
         recess: {
             core: {
-                src: ["less/**/*.less"],
-                dest: 'css/popup.css',
+                src: ["less/popup.less"],
+                dest: 'demo/css/core.css',
                 options: {
                     compile: true
                 }
@@ -94,21 +94,21 @@ module.exports = function(grunt) {
 
             //defaultSkin: {},
             
-            skin_skinRimless: {
-                src: ["skins/skinRimless/**/*.less","skins/skinRimless/components/**/*.less"],
-                dest: 'demo/css/skinRimless.css',
-                options: {
-                    compile: true
-                }
-            },
+            // skin_skinRimless: {
+            //     src: ["skins/skinRimless/**/*.less","skins/skinRimless/components/**/*.less"],
+            //     dest: 'demo/css/skinRimless.css',
+            //     options: {
+            //         compile: true
+            //     }
+            // },
 
-            skin_skinSimple: {
-                src: ["skins/skinSimple/**/*.less","skins/skinSimple/components/**/*.less"],
-                dest: 'demo/css/skinSimple.css',
-                options: {
-                    compile: true
-                }
-            }
+            // skin_skinSimple: {
+            //     src: ["skins/skinSimple/**/*.less","skins/skinSimple/components/**/*.less"],
+            //     dest: 'demo/css/skinSimple.css',
+            //     options: {
+            //         compile: true
+            //     }
+            // }
         }
     });
 

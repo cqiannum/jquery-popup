@@ -13,17 +13,18 @@
     <!-- Place favicon.ico and apple-touch-icon.png in the root directory -->
     <link rel="stylesheet" href="fonts\neuton\stylesheet.css">
     <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/skinSimple.css">
-    <link rel="stylesheet" href="css/skinRimless.css">
+<!--     <link rel="stylesheet" href="css/skinSimple.css">
+    <link rel="stylesheet" href="css/skinRimless.css"> -->
+    <link rel="stylesheet" href="css/core.css">
     
     <link rel="stylesheet" href="css/example.css">
     <link rel="stylesheet" href="css/prism.css">
 
-    <script src="js/vendor/jquery-1.8.0.min.js"></script>
+    <script src="js/vendor/jquery-1.9.1.min.js"></script>
     <script src="js/vendor/modernizr-2.6.2.min.js"></script>
     <script src="js/vendor/jquery.toc.js"></script>
     <script src="js/vendor/prism.js"></script>
-    <script src="../src/jquery.popup.js" type="text/javascript"></script>
+    <script src="../src/jq.popup.js" type="text/javascript"></script>
 
 </head>
 <body>
@@ -42,7 +43,7 @@
     &lt;img src="img/1-thumbnail.jpg" alt="" /&gt;
 &lt;/a&gt;</code></pre>
                 <div class="example">
-                    <a class="popup" href="img/1.jpg" data-popup-transition="fade" data-popup-title='this is a image' data-popup-skin='skinRimless'><img src="img/1-thumbnail.jpg" alt="" /></a>
+                    <a class="popup-image" href="img/1.jpg" data-popup-transition="fade" data-popup-title='this is a image' data-popup-skin='skinRimless'><img src="img/1-thumbnail.jpg" alt="" /></a>
                 </div>
             </section>
             <section>
@@ -192,10 +193,10 @@
           $('#toc').toc();
         })();
         $(document).ready(function() {
-          $('.popup').Popup();  
-          $('.popup1').Popup({autoPlay:true,skin: 'skinSimple'});
-          $('.popup-gallery').Popup({width:720,height:480,skin:'skinRimless'});
-          $('.popup-slide').Popup({sliderEffect: 'slide'});
+          $('.popup-image').popup();  
+          // $('.popup1').Popup({autoPlay:true,skin: 'skinSimple'});
+          // $('.popup-gallery').Popup({width:720,height:480,skin:'skinRimless'});
+          // $('.popup-slide').Popup({sliderEffect: 'slide'});
                  
         });
      

@@ -112,16 +112,20 @@
             return items;
         },
 
-    	create: function() {
-    		
+    	create: function() {  		
     		var self = this,
     			options = this.options;
 
     		// creat basic element
     		this.$overlay = $(options.tpl.overlay);
     		this.$wrap = $(options.tpl.container);
+            this.$close = $(options.tpl.close);
+            this.$loading = $(options.tpl.loading);
     		this.$container = this.$wrap.find('.' + this.namespace + '-container');
+            this.$contentWrap = this.$container.find('.' + this.namespace + '-content-wrap');
     		this.$content = this.$container.find('.' + this.namespace + '-content');
+
+            this.bindEvent();
 
     		if (this.isGroup) {
     			this.$next = $(ptions.tpl.next).appendTo(this.$container);
@@ -143,6 +147,8 @@
             // for remove scroll
             $('body').addClass(this.namespace + '-body');
 
+            this.$close.appendTo(this.$contentWrap);
+            this.$loading.appendTo(this.$container);
     		this.$overlay.appendTo('body');
     		this.$wrap.appendTo('body');
     	},
@@ -158,17 +164,24 @@
     		this.settings = $.extend({}, this.options, item);
 
     		this.index = index;
-    		this.type = this.settings.type || this.checkType(itme.url);
+    		this.type = this.settings.type || this.checkType.call(this, item.url);
     		this.url = item.url;
 
     		this.$container.addClass(this.namespace + '-' + this.type + '-holder');
 
             // deal with for image type
             if (this.type === 'image') {
+
                 this.$wrap.css({
                     'overflow-y': 'auto',
                     'overflow-x': 'hidden'
                 });
+
+                // retina only for image
+                if (window.devicePixelRatio > 1) {
+                    this.url = this.options.retina.replace(item.url);
+                    this.$container.addClass(this.namespace + '-image-retina');
+                }
             } else {
                 this.$wrap.css({
                     'overflow-y': 'scroll',
@@ -185,6 +198,7 @@
     		});
     	},
     	afterLoad: function() {
+            this.resize();
     		if (this.options.preload === true) {
     			this.preload();
     		}
@@ -213,13 +227,12 @@
     	      
             this.$overlay.removeClass(this.namespace + '-' + this.options.transition + '-open').addClass(this.namespace + '-' + this.options.transition + '-close');
             
-            // give time to css3 transition
+            // give time to render css3 transition
             setTimeout(function() {
-                self.$overlay.remove();
-                self.$container.remove();
-                $('body').removeClass(self.namespace + '-body');
+                // self.$overlay.remove();
+                // self.$container.remove();
+                // $('body').removeClass(self.namespace + '-body');
             }, 17)
-
     	},
     	preload: function() {
     		return;
@@ -230,38 +243,62 @@
                 this.types[this.type].resize(this);
             }
         },
+        bindEvent: function() {
+            this.$close.on('close', $.proxy(this.close, this));
+            this.$wrap.on('close', function(e) {
+                console.log(e.target);
+            });
+        },
 
     	// helper function
     	checkType: function(url) {
     		var type = null;
     		$.each(this.types, function(key,value) {
-    			if ($.type(value.match) === 'function') {
-    				type = value.match(url);
+    			if ($.type(value.match) === 'function') {               
+                    if (value.match(url)) {
+                        type = value.match(url);
+                    }
     			}
     		});
     		
-    		if (type === null) {
+    		if (type === false) {
     			throw new Error('unkonwn type !');
     		} else {
     			return type;
     		}
     	},
-    	showLoading: function() {},
-    	hideLoading: function() {}
+    	showLoading: function() {
+            this.$container.addClass(this.namespace + '-loading');
+        },
+    	hideLoading: function() {
+            this.$container.removeClass(this.namespace + '-loading');
+        }
     };
 
     Popup.defaults = {
     	namespace: 'popup',
     	theme: 'default',
     	transition: 'fade',
+
+        retina: {
+            ratio: 1,
+
+            // replace image src
+            replace: function(url) {
+                return url.replace(/\.\w+$/, function(m) { return '@2x' + m; });
+            }
+        },
+
     	tpl: {
     		overlay: '<div class="popup-overlay"></div>',
-    		container: '<div class="popup-wrap"><div class="popup-container"><div class="popup-content"></div></div></div>',
-            
-            loading: '<div class="popup-loading"></div>',
-            close: '<button title="Close" type="button" class="popup--close"></button>',
-            next: '<button title="next" type="button" class="popup--next"></button>',
-            prev: '<button title="prev" type="button" class="popup--prev"></button>'
+    		container: '<div class="popup-wrap"><div class="popup-container"><div class="popup-content-wrap"><div class="popup-content"></div></div></div></div>',    
+            loading: '<div class="popup-loading">loading...</div>',
+
+            // here use buttom but not <a> element
+            // thanks to http://www.nczonline.net/blog/2013/01/29/you-cant-create-a-button/
+            close: '<button title="Close" type="button" class="popup-close"></button>',
+            next: '<button title="next" type="button" class="popup-next"></button>',
+            prev: '<button title="prev" type="button" class="popup-prev"></button>'
         }
     };
 
@@ -271,24 +308,32 @@
     			if (url.match(/\.(png|PNG|jpg|JPG|jpeg|JPEG|gif|GIF)$/i)) {
     				return 'image';
     			} else {
-    				return ;
+    				return false;
     			}
     		},
     		getSize: function(img, callback) {
     			var timer,
-    				count = 0,
-    				internal = function(delay) {
+    				counter = 0,
+    				interval = function(delay) {
     					if (timer) {
     						clearInterval(timer);
     					}
 
     					timer = setInterval(function() {
+
     						if (img.naturalWidth > 0) {
     							callback();
     							clearInterval(timer);
     							return;
     						}
 
+                            // for IE 8/7 and below
+                            // thanks to http://www.jacklmoore.com/notes/naturalwidth-and-naturalheight-in-ie/
+                            if (img.width) {
+                                callback();
+                                clearInterval(timer);
+                                return;
+                            }
 
                             if(counter > 200) {
                                 clearInterval(timer);
@@ -305,22 +350,29 @@
     					}, delay);
     				};
 
-    				internal(1);
+    				interval(1);
     		},
 
+            // Progressive Image Rendering
+            // and we need konw image width before add it to page
+            // thanks to http://www.codinghorror.com/blog/2005/12/progressive-image-rendering.html
     		load: function(instance, dtd) {
-    			var img = new Image();
+    			var self = this,
+                    img = new Image();
 
     			img.src = instance.url;
-                $(img).addClass(instance.namespace + '-image')
+                $(img).addClass(instance.namespace + '-image');
 
     			img.onload = function() {
                     instance.hideLoading();
+                    instance.$container.addClass(instance.namespace + '-ready');
                 };
 
                 img.onerror = function() {
                     this.onload = this.onerror = null;
-                    self.errorHandle();
+                    instance.$container.addClass(instance.namespace + '-fail');
+                    instance.hideLoading();
+                    self.errorHandle();                 
                 };
 
                 if (img.complete === undefined || !img.complete) {
@@ -334,11 +386,11 @@
                         throw new Error('dtd is not a deferred object !');
                     } 
                 });
-    		},
-
-             
+    		},            
             resize: function(instance) {
                 var height = instance.$container.height();
+
+                // todo avoid visit Dom
                 instance.$content.find('img').css({
                     // minus five to be sure image height less than container
                     'max-height': parseInt(height) - 5 
@@ -346,15 +398,31 @@
             },
 
     		errorHandle: function() {
-
+                return ;
     		},
 
     		preload: function(url) {
     			var img = new Image();
     			img.src = url;
     		}
+    	},
+        iframe: {
+            match: function(url) {
+                if (url.match(/\.(ppt|PPT|tif|TIF|pdf|PDF)$/i)) {
+                    return 'iframe';
+                } else {
+                    return false;
+                }
+            },
 
-    	}
+            
+            load: function(instance, dtd) {
+                var iframe = '<iframe class="' + instance.namespace +'-iframe" src="//about:blank" frameborder="0" allowfullscreen></iframe>',
+                    $iframe = $(iframe);
+
+                $iframe.src = instance.url;
+            }
+        }
     };
 
     $.extend(Popup, {

@@ -47,6 +47,13 @@
                 </div>
             </section>
             <section>
+                <h3>Iframe</h3>
+                <pre class="has-example"><code class="language-markup">&lt;a class=&quot;popup&quot; href=&quot;https://maps.google.com/maps?q=221B+Baker+Street,+London,+United+Kingdom&hl=en&t=v&hnear=221B+Baker+St,+London+NW1+6XE,+United+Kingdom&output=embed&quot; data-popup-type=&quot;iframe&quot;&gt;iframe&lt;/a&gt;</code></pre>
+                <div class="example">
+                    <a class="popup-iframe" href="https://maps.google.com/maps?q=221B+Baker+Street,+London,+United+Kingdom&hl=en&t=v&hnear=221B+Baker+St,+London+NW1+6XE,+United+Kingdom&output=embed" data-popup-type="iframe" data-popup-width=740 data-popup-height=460 >iframe</a>
+                </div>
+            </section>
+            <section>
                 <h3>Inline Content</h3>
                 <pre class="has-example"><code class="language-markup">&lt;a class=&quot;popup&quot; href=&quot;#inline&quot;&gt;inline&lt;/a&gt;
 &lt;div id=&quot;inline&quot; style=&quot;display: none&quot;&gt;
@@ -70,13 +77,7 @@
                     <a class="popup" href="ajax.txt" data-popup-type="ajax">ajax</a>
                 </div>
             </section>
-            <section>
-                <h3>Iframe</h3>
-                <pre class="has-example"><code class="language-markup">&lt;a class=&quot;popup&quot; href=&quot;http://baidu.com&quot; data-popup-type=&quot;iframe&quot;&gt;iframe&lt;/a&gt;</code></pre>
-                <div class="example">
-                    <a class="popup" href="http://baidu.com" data-popup-type="iframe" data-popup-width=740 data-popup-height=460 >iframe</a>
-                </div>
-            </section>
+            
             <section>
                 <h3>Videos</h3>
                 <pre class="has-example"><code class="language-markup">
@@ -194,6 +195,7 @@
         })();
         $(document).ready(function() {
           $('.popup-image').popup();  
+          $('.popup-iframe').popup(); 
           // $('.popup1').Popup({autoPlay:true,skin: 'skinSimple'});
           // $('.popup-gallery').Popup({width:720,height:480,skin:'skinRimless'});
           // $('.popup-slide').Popup({sliderEffect: 'slide'});

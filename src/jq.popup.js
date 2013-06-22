@@ -105,7 +105,12 @@
                     }
                 });
 
-                obj.options = metas;         
+                obj.options = metas;  
+
+                if (metas.type) {
+                    obj.type = metas.type;
+                }
+
                 items.push(obj);
             });
 
@@ -161,13 +166,13 @@
     			self = this,
     			item = this.group[index];
     		
-    		this.settings = $.extend({}, this.options, item);
+    		this.settings = $.extend({}, this.options, item.options);
 
     		this.index = index;
-    		this.type = this.settings.type || this.checkType.call(this, item.url);
+    		this.type = this.settings.type || item.type;
     		this.url = item.url;
 
-    		this.$container.addClass(this.namespace + '-' + this.type + '-holder');
+    		this.$container.addClass(this.namespace + '-' + item.type + '-holder');
 
             // deal with for image type
             if (this.type === 'image') {
@@ -178,10 +183,10 @@
                 });
 
                 // retina only for image
-                if (window.devicePixelRatio > 1) {
-                    this.url = this.options.retina.replace(item.url);
-                    this.$container.addClass(this.namespace + '-image-retina');
-                }
+                // if (window.devicePixelRatio > 1) {
+                //     this.url = this.options.retina.replace(item.url);
+                //     this.$container.addClass(this.namespace + '-image-retina');
+                // }
             } else {
                 this.$wrap.css({
                     'overflow-y': 'scroll',
@@ -281,7 +286,7 @@
     	transition: 'fade',
 
         retina: {
-            ratio: 1,
+            ratio: 2,
 
             // replace image src
             replace: function(url) {
@@ -381,6 +386,12 @@
 
                 this.getSize(img, function() {
                     if($.type(dtd.resolve) === 'function') {
+                        // if (window.devicePixelRatio > 1) {
+                        //     $(img).css({
+                        //         'max-width': img.width / instance.options.retina.ratio,
+                        //         'width': '100%'
+                        //     });
+                        // }
                         dtd.resolve(img);
                     } else {
                         throw new Error('dtd is not a deferred object !');
@@ -418,9 +429,10 @@
             
             load: function(instance, dtd) {
                 var iframe = '<iframe class="' + instance.namespace +'-iframe" src="//about:blank" frameborder="0" allowfullscreen></iframe>',
-                    $iframe = $(iframe);
+                    $iframe = $(iframe).attr('src', instance.url);
 
-                $iframe.src = instance.url;
+
+                dtd.resolve($iframe);
             }
         }
     };

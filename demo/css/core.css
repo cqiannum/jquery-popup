@@ -85,7 +85,13 @@
           box-sizing: border-box;
 }
 
-.popup-wrap .popup-iframe-holder {
+.popup-wrap .popup-iframe-holder .popup-content-wrap {
+  width: 100%;
+  height: 100%;
+  max-width: 720px;
+}
+
+.popup-wrap .popup-iframe-holder .popup-content {
   width: 100%;
   height: 0;
   padding-bottom: 75%;

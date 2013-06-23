@@ -152,7 +152,7 @@
             // for remove scroll
             $('body').addClass(this.namespace + '-body');
 
-            this.$close.appendTo(this.$contentWrap);
+            this.$close.appendTo(this.$contentWrap).css({display: 'none'});
             this.$loading.appendTo(this.$container);
     		this.$overlay.appendTo('body');
     		this.$wrap.appendTo('body');
@@ -179,6 +179,7 @@
     		this.$container.trigger('change.popup', this);
 
     		dtd.done(function($data) {
+                self.$close.css({display: 'block'});
     			self.$content.empty().append($data);
     			self.afterLoad();
     		});
@@ -466,6 +467,7 @@
             },
             load: function(instance, dtd) {
                  var $inline = $(instance.url).html();
+                 instance.hideLoading();
                  dtd.resolve($inline);
             }
         },
@@ -490,8 +492,32 @@
             }
         },
         swf: {
+            match: function(url) {
+                if (url.match(/\.(swf)((\?|#).*)?$/i)) {
+                    return 'swf';
+                } else {
+                    return false;
+                }
+            },
             load: function(instance, dtd) {
+                var content = '',
+                    embed = '',
+                    swf = instance.settings.swf;   
 
+                content += '<object class="' + instance.namespace +'-swf" classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" width="100%" height="100%">';
+                content += '<param name="movie" value="' + instance.url + '"></param>';
+
+                // this is settings
+                $.each(swf, function(name, val) {
+                    content += '<param name="' + name + '" value="' + val + '"></param>';
+                    embed += ' ' + name + '="' + val + '"';
+                });
+
+                content += '<embed src="' + instance.url + '" type="application/x-shockwave-flash"  width="100%" height="100%"' + embed + '></embed>';
+                content += '</object>';
+
+                instance.hideLoading();
+                dtd.resolve($(content));
             }
         }
     };

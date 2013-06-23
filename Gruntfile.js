@@ -85,7 +85,7 @@ module.exports = function(grunt) {
         },
         recess: {
             core: {
-                src: ["less/popup.less"],
+                src: ["less/core.less"],
                 dest: 'demo/css/core.css',
                 options: {
                     compile: true

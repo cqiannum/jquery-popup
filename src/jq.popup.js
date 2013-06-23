@@ -174,25 +174,27 @@
 
     		this.$container.addClass(this.namespace + '-' + item.type + '-holder');
 
+
+
             // deal with for image type
-            if (this.type === 'image') {
+            // if (this.type === 'image') {
 
-                this.$wrap.css({
-                    'overflow-y': 'auto',
-                    'overflow-x': 'hidden'
-                });
+            //     this.$wrap.css({
+            //         'overflow-y': 'auto',
+            //         'overflow-x': 'hidden'
+            //     });
 
-                // retina only for image
-                // if (window.devicePixelRatio > 1) {
-                //     this.url = this.options.retina.replace(item.url);
-                //     this.$container.addClass(this.namespace + '-image-retina');
-                // }
-            } else {
-                this.$wrap.css({
-                    'overflow-y': 'scroll',
-                    'overflow-x': 'hidden'
-                });
-            }
+            //     // retina only for image
+            //     // if (window.devicePixelRatio > 1) {
+            //     //     this.url = this.options.retina.replace(item.url);
+            //     //     this.$container.addClass(this.namespace + '-image-retina');
+            //     // }
+            // } else {
+            //     this.$wrap.css({
+            //         'overflow-y': 'scroll',
+            //         'overflow-x': 'hidden'
+            //     });
+            // }
 
     		this.types[item.type].load(this, dtd);
     		this.$container.trigger('change.popup', this);
@@ -234,10 +236,12 @@
             
             // give time to render css3 transition
             setTimeout(function() {
-                // self.$overlay.remove();
-                // self.$container.remove();
-                // $('body').removeClass(self.namespace + '-body');
-            }, 17)
+                
+            }, 17);
+
+            self.$overlay.remove();
+            self.$wrap.remove();
+            $('body').removeClass(self.namespace + '-body');
     	},
     	preload: function() {
     		return;
@@ -249,8 +253,8 @@
             }
         },
         bindEvent: function() {
-            this.$close.on('close', $.proxy(this.close, this));
-            this.$wrap.on('close', function(e) {
+            this.$close.on('click', $.proxy(this.close, this));
+            this.$wrap.on('click', function(e) {
                 console.log(e.target);
             });
         },
@@ -285,12 +289,29 @@
     	theme: 'default',
     	transition: 'fade',
 
+        // do we need a render ?
+        render: function(data) {
+            return data;
+        },
+
+        // for retina to change image
         retina: {
             ratio: 2,
 
             // replace image src
             replace: function(url) {
                 return url.replace(/\.\w+$/, function(m) { return '@2x' + m; });
+            }
+        },
+
+        ajax: {
+            // expect return html string
+            render: function(data) {
+                return $(data);
+            },
+            options: {
+                dataType: 'html',
+                headers  : { 'popup': true } 
             }
         },
 
@@ -301,7 +322,7 @@
 
             // here use buttom but not <a> element
             // thanks to http://www.nczonline.net/blog/2013/01/29/you-cant-create-a-button/
-            close: '<button title="Close" type="button" class="popup-close"></button>',
+            close: '<button title="Close" type="button" class="popup-close">x</button>',
             next: '<button title="next" type="button" class="popup-next"></button>',
             prev: '<button title="prev" type="button" class="popup-prev"></button>'
         }
@@ -424,15 +445,51 @@
                 } else {
                     return false;
                 }
-            },
-
-            
+            },  
             load: function(instance, dtd) {
                 var iframe = '<iframe class="' + instance.namespace +'-iframe" src="//about:blank" frameborder="0" allowfullscreen></iframe>',
                     $iframe = $(iframe).attr('src', instance.url);
 
 
                 dtd.resolve($iframe);
+            }
+        },
+        inline: {
+            match: function(url) {
+                if (url.charAt(0) === "#") {
+                    return 'inline';
+                } else {
+                    return false;
+                }
+            },
+            load: function(instance, dtd) {
+                 var $inline = $(instance.url).html();
+                 dtd.resolve($inline);
+            }
+        },
+        ajax: {
+            load: function(instance, dtd) {
+                var ajax = instance.settings.ajax;
+
+                $.ajax($.extend({}, ajax.options, {
+                    url: instance.url,
+                    error: function() {},
+                    success: function(data) {
+                        var $ajax;
+                        if ($.type(ajax.render) === 'function') {
+                            $ajax = ajax.render(data);
+                        } else {
+                            $ajax = $(data);
+                        }
+                        dtd.resolve($ajax);
+                    }
+                }))
+
+            }
+        },
+        swf: {
+            load: function(instance, dtd) {
+
             }
         }
     };

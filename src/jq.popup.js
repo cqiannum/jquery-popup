@@ -174,28 +174,7 @@
 
     		this.$container.addClass(this.namespace + '-' + item.type + '-holder');
 
-
-
-            // deal with for image type
-            // if (this.type === 'image') {
-
-            //     this.$wrap.css({
-            //         'overflow-y': 'auto',
-            //         'overflow-x': 'hidden'
-            //     });
-
-            //     // retina only for image
-            //     // if (window.devicePixelRatio > 1) {
-            //     //     this.url = this.options.retina.replace(item.url);
-            //     //     this.$container.addClass(this.namespace + '-image-retina');
-            //     // }
-            // } else {
-            //     this.$wrap.css({
-            //         'overflow-y': 'scroll',
-            //         'overflow-x': 'hidden'
-            //     });
-            // }
-
+            this.showLoading();
     		this.types[item.type].load(this, dtd);
     		this.$container.trigger('change.popup', this);
 
@@ -277,10 +256,10 @@
     		}
     	},
     	showLoading: function() {
-            this.$container.addClass(this.namespace + '-loading');
+            this.$loading.addClass(this.namespace + '-loading-show');
         },
     	hideLoading: function() {
-            this.$container.removeClass(this.namespace + '-loading');
+            this.$loading.removeClass(this.namespace + '-loading-show');
         }
     };
 
@@ -447,11 +426,34 @@
                 }
             },  
             load: function(instance, dtd) {
-                var iframe = '<iframe class="' + instance.namespace +'-iframe" src="//about:blank" frameborder="0" allowfullscreen></iframe>',
-                    $iframe = $(iframe).attr('src', instance.url);
+                // var iframe = '<iframe class="' + instance.namespace +'-iframe" src="//about:blank" frameborder="0" allowfullscreen></iframe>',
+                //     $iframe = $(iframe);
+
+                // $iframe.load(function() {
+                //     instance.hideLoading();
+                // });
+
+                // $iframe.attr('src', instance.url);
+                // dtd.resolve($iframe);
 
 
-                dtd.resolve($iframe);
+                // thanks to http://www.planabc.net/2009/09/22/iframe_onload/
+                var iframe = document.createElement("iframe");
+                iframe.src = instance.url;
+
+                if (iframe.attachEvent){
+                    iframe.attachEvent("onload", function(){
+                         instance.hideLoading();
+                    });
+                } else {
+                    iframe.onload = function(){
+                         instance.hideLoading();
+                    };
+                }
+
+                iframe.className = instance.namespace + '-iframe';
+                dtd.resolve($(iframe));
+
             }
         },
         inline: {

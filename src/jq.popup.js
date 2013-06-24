@@ -294,13 +294,49 @@
                 headers  : { 'popup': true } 
             }
         },
+        swf: {
+            allowscriptaccess: 'always',
+            allowfullscreen: 'true',
+            wmode: 'transparent',
+        },
+        html5: {
+            width: "100%",
+            height: "100%",
+
+            preload: "load",
+            controls: "controls",
+            poster: '',
+            
+            type: {
+                mp4: "video/mp4",
+                webm: "video/webm",
+                ogg: "video/ogg",
+            },
+
+            // example
+            // source: [
+            //     {
+            //         src: 'video/movie.mp4',
+            //         type: 'mp4', // mpc,webm,ogv
+            //     },
+            //     {
+            //         src: 'video/movie.webm',
+            //         type: 'webm',
+            //     },
+            //     {
+            //         src: 'video/movie.ogg',
+            //         type: 'ogg',
+            //     }
+            // ]
+            source: null
+        },
 
     	tpl: {
     		overlay: '<div class="popup-overlay"></div>',
     		container: '<div class="popup-wrap"><div class="popup-container"><div class="popup-content-wrap"><div class="popup-content"></div></div></div></div>',    
             loading: '<div class="popup-loading">loading...</div>',
 
-            // here use buttom but not <a> element
+            // here use buttom but <a> element
             // thanks to http://www.nczonline.net/blog/2013/01/29/you-cant-create-a-button/
             close: '<button title="Close" type="button" class="popup-close">x</button>',
             next: '<button title="next" type="button" class="popup-next"></button>',
@@ -485,6 +521,7 @@
                         } else {
                             $ajax = $(data);
                         }
+                        instance.hideLoading();
                         dtd.resolve($ajax);
                     }
                 }))
@@ -507,7 +544,7 @@
                 content += '<object class="' + instance.namespace +'-swf" classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" width="100%" height="100%">';
                 content += '<param name="movie" value="' + instance.url + '"></param>';
 
-                // this is settings
+                // this is swf settings
                 $.each(swf, function(name, val) {
                     content += '<param name="' + name + '" value="' + val + '"></param>';
                     embed += ' ' + name + '="' + val + '"';
@@ -518,6 +555,49 @@
 
                 instance.hideLoading();
                 dtd.resolve($(content));
+            }
+        },
+        html5: {
+            match: function(url) {
+                if (url.match(/\.(mp4|webm|ogg)$/i)) {
+                    return 'html5';
+                } else {
+                    return false;
+                }
+            },
+            load: function(instance, dtd) {
+                var video = '', sourceLists, type,
+                    html5 = instance.settings.html5;
+                
+                video += '<video class="' + instance.namespace + '-html5"';
+                video += ' width:' + html5.width;
+                video += ' height:' + html5.height;
+                video += ' ' + html5.preload;
+                video += ' ' + html5.controls;
+                video += ' poster:' + html5.poster;
+                video += ' >';
+
+                sourceLists = instance.url.split(',');
+
+                //get videos address from url
+                if (sourceLists.length !== 0) {
+                    for(var i = 0,len = sourceLists.length; i < len; i++) {
+                        type = $.trim(sourceLists[i].split('.')[1]);
+                        video += '<source src="' + sourceLists[i] + '" type="' + html5.type[type] + '"></source>';
+                    }
+                }
+
+                //get videos address from options
+                if (html5.source && html5.source.length !== 0) {
+                    $.each(html5.source, function(i, arr) {
+                        video += '<source src="' + arr.src + '" type="' + html5.type[arr.type] + '"></source>';
+                    });
+                }
+
+                video += '</video>';
+
+                instance.hideLoading();
+                dtd.resolve($(video));
             }
         }
     };

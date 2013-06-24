@@ -111,17 +111,25 @@
             </section>
             
             <section>
-                <h3>Videos</h3>
+                <h3>Swf</h3>
                 <pre class="has-example"><code class="language-markup">
 
                 </code></pre>
                 <div class="example">                   
-                    <a class="popup" 
+                    <a class="popup-swf" 
                     href="http://www.adobe.com/jp/events/cs3_web_edition_tour/swfs/perform.swf">SWF</a>
                     <br />
+                </div>
+            </section>
+             <section>
+                <h3>Html5 video</h3>
+                <pre class="has-example"><code class="language-markup">
+
+                </code></pre>
+                <div class="example">                   
                     
-                    <a class="popup"
-                    data-popup-type='vhtml5'
+                    <a class="popup-html5"
+                    data-popup-type='html5'
                     href="video/movie.ogg,video/movie.mp4,video/movie.webm"
                     >Local Video</a>
                 </div>
@@ -230,6 +238,8 @@
           $('.popup-iframe').popup(); 
           $('.popup-inline').popup(); 
           $('.popup-ajax').popup(); 
+          $('.popup-swf').popup(); 
+          $('.popup-html5').popup(); 
           // $('.popup1').Popup({autoPlay:true,skin: 'skinSimple'});
           // $('.popup-gallery').Popup({width:720,height:480,skin:'skinRimless'});
           // $('.popup-slide').Popup({sliderEffect: 'slide'});

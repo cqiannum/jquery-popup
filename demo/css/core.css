@@ -135,3 +135,57 @@
      -moz-box-sizing: border-box;
           box-sizing: border-box;
 }
+
+.popup-wrap .popup-swf-holder .popup-content-wrap {
+  width: 100%;
+  max-width: 720px;
+}
+
+.popup-wrap .popup-swf-holder .popup-content {
+  position: relative;
+  width: 100%;
+  height: 0;
+  padding-bottom: 60%;
+  overflow: hidden;
+}
+
+.popup-wrap .popup-swf-holder .popup-swf {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  padding: 30px 0;
+  margin: 0 auto;
+  border: none;
+  -webkit-box-sizing: border-box;
+     -moz-box-sizing: border-box;
+          box-sizing: border-box;
+}
+
+.popup-wrap .popup-html5-holder .popup-content-wrap {
+  width: 100%;
+  max-width: 720px;
+}
+
+.popup-wrap .popup-html5-holder .popup-content {
+  position: relative;
+  width: 100%;
+  height: 0;
+  padding-bottom: 60%;
+  overflow: hidden;
+}
+
+.popup-wrap .popup-html5-holder .popup-html5 {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  padding: 30px 0;
+  margin: 0 auto;
+  border: none;
+  -webkit-box-sizing: border-box;
+     -moz-box-sizing: border-box;
+          box-sizing: border-box;
+}

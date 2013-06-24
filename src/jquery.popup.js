@@ -501,7 +501,7 @@
                     });
                     this.$container.on('mouseleave.popup',function(){
                         slider.play(self);
-                    })
+                    });
                 }
             }
 

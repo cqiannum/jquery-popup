@@ -57,6 +57,7 @@
 
                 if (group.length > 1) {
                     self.isGroup = true;
+                    self.total = group.length;
                 }
 
     			self.open();
@@ -117,7 +118,7 @@
             return items;
         },
 
-    	create: function() {  		
+    	create: function() {
     		var self = this,
     			options = this.options;
 
@@ -133,7 +134,7 @@
             this.bindEvent();
 
     		if (this.isGroup) {
-    			this.$next = $(ptions.tpl.next).appendTo(this.$container);
+    			this.$next = $(options.tpl.next).appendTo(this.$container);
     			this.$prev = $(options.tpl.prev).appendTo(this.$container);
 
     			this.$next.on('click', $.proxy(this.next, this));
@@ -199,6 +200,7 @@
 
             this.direction = 'next';
             this.goto(index);
+            return false;
         }, 
         prev: function() {
             var index = this.index;
@@ -208,6 +210,7 @@
             }
             this.direction = 'prev';
             this.goto(index);
+            return false;
         },
     	close: function() {
             var self = this;
@@ -339,8 +342,8 @@
             // here use buttom but <a> element
             // thanks to http://www.nczonline.net/blog/2013/01/29/you-cant-create-a-button/
             close: '<button title="Close" type="button" class="popup-close">x</button>',
-            next: '<button title="next" type="button" class="popup-next"></button>',
-            prev: '<button title="prev" type="button" class="popup-prev"></button>'
+            next: '<button title="next" type="button" class="popup-navigate popup-next"></button>',
+            prev: '<button title="prev" type="button" class="popup-navigate popup-prev"></button>'
         }
     };
 

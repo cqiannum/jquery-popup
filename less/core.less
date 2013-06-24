@@ -33,6 +33,76 @@
 	overflow-y: auto;
 	overflow-x: hidden;
 
+	.popup-next {
+		right: 0;
+
+	    &:after {
+	        border-left: 12px solid #000;
+	        left: 3px;
+	    }
+	    &:before  {
+	        border-left: 20px solid #FFF;
+	    }
+	}
+
+	.popup-prev {
+		left: 0;
+
+	    &:after {
+	        border-right: 12px solid #000;
+	        left: 5px;
+	    }
+	    &:before {
+	        border-right: 20px solid #FFF;
+	    }
+	}
+
+	.popup-navigate {
+		position: absolute;
+		top: 0;
+		opacity: 0.65;
+		margin: 0;
+		top: 50%;
+		margin-top: -55px;
+		padding: 0;
+		width: 90px;
+		height: 110px;
+		-webkit-tap-highlight-color: rgba(0,0,0,0);
+
+		&:active {
+			margin-top: -54px;
+		}
+
+		&:hover, &:focus {
+			opacity: 1;
+		}
+
+		&:before, &:after {
+			content: '';
+			display: block;
+			width: 0;
+			height: 0;
+			position: absolute;
+			left: 0;
+			top: 0;
+			margin-top: 35px;
+			margin-left: 35px;
+			border: solid transparent;
+		}
+
+		&:after {
+			opacity: 0.65;
+			border-top-width: 12px;
+			border-bottom-width: 12px;
+			top:8px;
+		}
+
+		 &:before  {
+			border-top-width: 20px;
+			border-bottom-width: 20px;
+		}
+	}
+
 	.popup-container {
 		
 		position: absolute;

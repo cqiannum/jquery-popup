@@ -20,12 +20,46 @@
       throws(block, [expected], [message])
   */
 
-  module('jQuery#awesome', {
+  module('Plugin is Loaded');
+
+  test('check', function() {
+      var popup = $.popup;
+
+      if (popup) {
+        ok(true);
+      } else {
+        ok(false);
+      }
+  });
+
+  module('Event Test', {
     // This will run before each test in this module.
     setup: function() {
-      this.elems = $('#qunit-fixture').children();
+      var $elem = $('<div></div>');
+      this.popup = $.popup;
+      this.instance = new $.popup($elem);
     }
   });
+
+  test('popup::init', function() {
+
+  });
+  test('popup::create', function() {
+      
+  });
+  test('popup::change', function() {
+      
+  });
+  test('popup::close', function() {
+      
+  });
+
+
+
+
+
+
+  
 
   test('is chainable', function() {
     expect(1);
@@ -46,17 +80,5 @@
     strictEqual($.awesome({punctuation: '!'}), 'awesome!', 'should be thoroughly awesome');
   });
 
-  module(':awesome selector', {
-    // This will run before each test in this module.
-    setup: function() {
-      this.elems = $('#qunit-fixture').children();
-    }
-  });
-
-  test('is awesome', function() {
-    expect(1);
-    // Use deepEqual & .get() when comparing jQuery objects.
-    deepEqual(this.elems.filter(':awesome').get(), this.elems.last().get(), 'knows awesome when it sees it');
-  });
 
 }(jQuery));

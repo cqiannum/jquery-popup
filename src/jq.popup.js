@@ -174,6 +174,8 @@
     			}		
     		});
 
+            $doc.trigger('popup::create', this);
+
     		this.$overlay.addClass(this.namespace + '-' + this.options.transition + '-open');
 
             // for remove scroll
@@ -183,9 +185,6 @@
             this.$loading.appendTo(this.$container);
     		this.$overlay.appendTo('body');
     		this.$wrap.appendTo('body');
-
-
-            this.$container.trigger('popup::create', this);
     	},
     	open: function() {
     		this.create();
@@ -304,17 +303,8 @@
                     return false;
                 });
             }
-
-            if (this.isGroup === true && this.options.keyboard === true) {
-                this.keyboard.attach({
-                    escape: $.proxy(this.close,this),
-                    left: $.proxy(this.prev,this),
-                    right: $.proxy(this.next,this)
-                });
-            }
         },
         unbindEvent: function() {
-            this.keyboard.detach();
             this.$wrap.off('click.popup');
         },
 
@@ -352,7 +342,7 @@
         keyboard: true,
 
         // slider
-        autoPlay: true,
+        autoSlide: true,
         playSpeed: 300,
 
         // do we need a render ?
@@ -689,74 +679,6 @@
         }
     };
 
-    Popup.prototype.keyboard = {
-        keys : {
-            'UP': 38,
-            'DOWN': 40,
-            'LEFT': 37,
-            'RIGHT': 39,
-            'RETURN': 13,
-            'ESCAPE': 27,
-            'BACKSPACE': 8,
-            'SPACE': 32
-        },
-        map : {},
-        bound: false,
-        press: function(e) {
-            var key = e.keyCode || e.which;
-            if ( key in this.map && typeof this.map[key] === 'function' ) {
-                this.map[key]();
-            }
-        },
-        attach: function(map) {
-            var key, up;
-            for( key in map ) {
-                if ( map.hasOwnProperty( key ) ) {
-                    up = key.toUpperCase();
-                    if ( up in this.keys ) {
-                        this.map[ this.keys[up] ] = map[key];
-                    } else {
-                        this.map[ up ] = map[key];
-                    }
-                }
-            }
-            if ( !this.bound ) {
-                this.bound = true;
-                $(document).bind('keydown', $.proxy(this.press, this));
-            }
-        },
-        detach: function() {
-            this.bound = false;
-            this.map = {};
-            $(document).unbind('keydown', this.press);
-        }
-    };
-    Popup.prototype.slider = {
-        timer: {},
-        clear: function() {
-            clearTimeout(this.timer);
-        },
-        set: function(instance) {
-            this.clear();
-            if (instance.isGroup) {
-                this.timer = setTimeout($.proxy(instance.next,instance),instance.options.playSpeed);
-            }  
-        },
-        play: function(instance) {
-            instance.isPaused = false;
-            this.set(instance);
-        },
-        pause: function(instance) {
-            this.clear();
-            instance.current.isPaused = true;
-        }
-    };
-
-    $.extend(Popup, {
-    	registerType: function() {},
-        registerComponent: function(){}
-    });
-
     $.fn.popup = function(options) {    
 
     	if (typeof options === 'string') {
@@ -776,6 +698,99 @@
         }
     };
 
+})(jQuery, document, window);
+
+// keyboard plugin
+(function(undefined) {
+    var $doc = $(document);
+    var keyboard = {
+        keys : {
+            'UP': 38,
+            'DOWN': 40,
+            'LEFT': 37,
+            'RIGHT': 39,
+            'RETURN': 13,
+            'ESCAPE': 27,
+            'BACKSPACE': 8,
+            'SPACE': 32
+        },
+        map : {},
+        bound: false,
+        press: function(e) {
+            var key = e.keyCode || e.which;
+            if ( key in keyboard.map && typeof keyboard.map[key] === 'function' ) {
+                keyboard.map[key].call(self, e);
+            }
+        },
+        attach: function(map) {
+            var key, up;
+            for( key in map ) {
+                if ( map.hasOwnProperty( key ) ) {
+                    up = key.toUpperCase();
+                    if ( up in keyboard.keys ) {
+                        keyboard.map[ keyboard.keys[up] ] = map[key];
+                    } else {
+                        keyboard.map[ up ] = map[key];
+                    }
+                }
+            }
+            if ( !keyboard.bound ) {
+                keyboard.bound = true;
+                $doc.bind('keydown', keyboard.press);
+            }
+        },
+        detach: function() {
+            keyboard.bound = false;
+            keyboard.map = {};
+            $doc.unbind('keydown', keyboard.press);
+        }
+    };
+
+    $doc.on('popup::create', function(event, instance) {
+        if (instance.isGroup === true && instance.options.keyboard === true) {
+            keyboard.attach({
+                escape: $.proxy(instance.close,instance),
+                left: $.proxy(instance.prev,instance),
+                right: $.proxy(instance.next,instance)
+            });
+        }
+        return false;
+    });
+
+    $doc.on('popup::close', function(event, instance) {
+        if (instance.isGroup === true && instance.options.keyboard === true) {
+            keyboard.detach();
+        }
+        return false;
+    })
+})();
+
+// // event test
+// var $doc = $(document);
+
+// $doc.on('popup::create', function(instance) {
+//     console.log('create');
+// });
+
+// $doc.on('popup::init', function(instance) {
+//     console.log('init');
+// });
+
+// $doc.on('popup::close', function(instance) {
+//     console.log('close');
+// });
+
+// $doc.on('popup::change', function(instance) {
+//     console.log('change');
+// });
+
+
+// history plugin
+(function(undefined) {
+    var hash = window.location.hash;
+    var popId = 0;
+    var hashEmit = true;
+    var current = null;
     // for history
     function parseHash(hash) {
         var arr = hash.split('/');
@@ -812,67 +827,194 @@
     });
 
     // fixme: 'popup' use namespace
-    if ($.type(hash) === 'string' &&  hash.match(/(popup)/i)) {
-        var result = parseHash(hash);
+    // if ($.type(hash) === 'string' &&  hash.match(/(popup)/i)) {
+    //     var result = parseHash(hash);
 
-        setTimeout(function() {
-            var $element = $('[popup-Id="' + result.id +'"]'),
-                instance = $element.data('popup');
+    //     setTimeout(function() {
+    //         var $element = $('[popup-Id="' + result.id +'"]'),
+    //             instance = $element.data('popup');
 
-            if (instance.active === true) {
-                instance.goto(result.index);
-            } else {
-                $element.click();
-            }
-        }, 17);
-    }
+    //         if (instance.active === true) {
+    //             instance.goto(result.index);
+    //         } else {
+    //             $element.click();
+    //         }
+    //     }, 17);
+    // }
+})();
 
-})(jQuery, document, window);
-
-(function(popup, undefined) {
-    var keyboard = {
-        keys : {
-            'UP': 38,
-            'DOWN': 40,
-            'LEFT': 37,
-            'RIGHT': 39,
-            'RETURN': 13,
-            'ESCAPE': 27,
-            'BACKSPACE': 8,
-            'SPACE': 32
+// slider plugin
+(function(undefined) {
+    var $doc = $(document);
+    // fixme: do I really need isPaused property
+    var slider = {
+        timer: {},
+        clear: function() {
+            clearTimeout(this.timer);
         },
-        map : {},
-        bound: false,
-        press: function(e) {
-            var key = e.keyCode || e.which;
-            if ( key in this.map && typeof this.map[key] === 'function' ) {
-                this.map[key]();
-            }
+        set: function(instance) {
+            this.clear();
+            if (instance.isGroup) {
+                this.timer = setTimeout($.proxy(instance.next,instance),instance.options.playSpeed);
+            }  
         },
-        attach: function(map) {
-            var key, up;
-            for( key in map ) {
-                if ( map.hasOwnProperty( key ) ) {
-                    up = key.toUpperCase();
-                    if ( up in this.keys ) {
-                        this.map[ this.keys[up] ] = map[key];
-                    } else {
-                        this.map[ up ] = map[key];
-                    }
-                }
-            }
-            if ( !this.bound ) {
-                this.bound = true;
-                $(document).bind('keydown', $.proxy(this.press, this));
-            }
+        play: function(instance) {
+            instance.isPaused = false;
+            this.set(instance);
         },
-        detach: function() {
-            this.bound = false;
-            this.map = {};
-            $(document).unbind('keydown', this.press);
+        pause: function(instance) {
+            this.clear();
+            instance.isPaused = true;
         }
     };
-    var init = function() {
 
+    $doc.on('popup::change', function(event, instance) {
+        if (instance.options.autoSlide === true) {
+            slider.play(instance);
+        }
+    });
+    $doc.on('popup::close', function(event, instance) {
+        if (instance.options.autoSlide === true) {
+            slider.pause(instance);
+        }
+    })
+})();
+
+// components
+
+// components:: thumbnails
+(function(undefined) {
+    var $doc = $(document);
+    var thumbnail = {
+        defaults: {
+            meida: ['screen','ipad'],
+            tpl: {
+                wrap:'<div class="popup-thumbnails"></div>',
+                holder: '<div class="popup-thumbnails-holder"></div>',
+                inner: '<div class="popup-thumbails-inner"></div>',
+                item: '<a class="thumb-loading" href="javascript:;"><span></span></a>',
+                next: '<a title="Next" class="popup-thumbnails-next" href="javascript:;"></a>',
+                prev: '<a title="Previous" class="popup-thumbnails-prev" href="javascript:;"></a>'
+            },
+            map: {
+                none: '',
+                iframe: '',
+                ajax: '',
+                vhtml5: ''
+            }
+        },  
+        build: function() {
+            var tpl = this.opts.tpl;
+
+            this.$wrap = $(tpl.wrap);
+            this.$holder = $(tpl.holder);
+            this.$inner = $(tpl.inner).appendTo(this.$holder);
+            this.$prev = $(tpl.prev);
+            this.$next = $(tpl.next);
+
+            //this.$inner.css({position:'absolute',top:0,left:0});
+
+            var self = this;
+
+            this.$prev.add(this.$holder).add(this.$next).appendTo(this.$wrap);
+
+            this.$wrap.appendTo($('.popup-container'));
+        },
+        active: function(index) {
+            var act = 'popup-thumbnail-active';
+            this.$holder.find('.popup-thumbnail-active').removeClass(act);
+            this.$holder.find('a').eq(index).addClass(act);
+
+            this.resetPos(index);
+        },
+
+        //main 
+        init: function(instance,options) {
+            var $items,
+                self = this,
+                chunks = [],
+                data = instance.dataPool.content,
+                opts = $.extend(true,this.opts,this.defaults,options);
+
+            //here add thumbnail
+            $.each(data,function(key,value) {
+                if (value.thumb) {
+                    chunks.push(value.thumb);
+                } else {
+                    if (value.type === "image") {
+                        chunks.push(value.url);
+                    } else if (opts.map[value.type]) {
+                        chunks.push(opts.map[value.type]);
+                    } else {
+                        chunks.push(opts.map['none']);
+                    }
+                }
+            });
+
+
+
+            this.addChunk(chunks);
+
+
+            this.build();  
+
+
+            $items = this.$holder.find('a');  
+
+            this._position();
+
+            //add to DOM
+
+            this.active(instance.index);     
+
+            this.$prev.on('click',function() { $.proxy(self.move,self)('left'); });
+            this.$next.on('click',function() { $.proxy(self.move,self)('right'); });
+            this.$holder.delegate('a','click',function(event) {
+                var index = $items.index(event.currentTarget);
+                instance.show(index);
+            });
+
+            instance.$container.on('change.popup',function() {
+                self.active(instance.index);
+            });
+            instance.$container.on('dataChange.popup',function(arr) {
+                //maybe it need some work
+                
+                $.proxy(self.addChunk,self)(arr);
+            });
+            instance.$container.on('close.popup',$.proxy(self.close,self));
+        },
+        goto: function() {},
+        load: function(instance) {
+            var $items = this.$holder.find('a');
+           
+            $.each(this.thumbChunk,function(i,v) {
+                $('<img />').load(function() {
+                    $items.eq(i).removeClass('thumb-loading').append($(this));
+                }).error(function() {
+                    $items.eq(i).removeClass('thumb-loading').append($(this));
+                }).attr('src', v);
+            });  
+
+            this.loaded = true;
+        },
+        close: function(){
+        }
     };
-})($.popup);
+
+    $doc.on('popup::create', function(event,instance) {
+        if (instance.options.components.thumbnail) {
+            thumbnail.init(instance);
+        }
+    });
+    $doc.on('popup::change', function(event,instance) {
+        if (instance.options.components.thumbnail) {
+            thumbnail.goto(instance);
+        }
+    });
+    $doc.on('popup::close', function(event,instance) {
+        if (instance.options.components.thumbnail) {
+            thumbnail.close(instance);
+        }
+    });
+})();

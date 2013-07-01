@@ -10,9 +10,16 @@
 	// Optional, but considered best practice by some
     "use strict";
 
+    // fixme: test broswers compatibility
+    var hash = window.location.hash;
+    var popId = 0;
+    var hashEmit = true;
+    var current = null;
+
     var Popup = $.popup = function(element, options) {
 
     	this.$element = $(element);
+        this.$target = null;
 
     	// for gallery
         this.active = false;
@@ -25,8 +32,7 @@
         this.total = 0;
         this.type = '';
         this.url = '';
-        this.target = null;
-
+        
         if (!options) {
         	options = {};
         }
@@ -38,14 +44,29 @@
         this.comps = comps.split(',');
 
         this.init();
+
     };
 
     Popup.prototype = {
     	constructor: Popup,
+
     	themes: {},
     	components: {},
+
     	init: function() {
     		var self = this;
+
+            this.$element.each(function(i,v) {
+                var name = $(v).data('popup-group'),
+                    index = i;
+
+                if (!name) {
+                    popId++;
+                    name = popId;
+                }
+
+                $(v).attr('popup-id','/popup-' + name + '/' + index);
+            });
 
     		this.$element.on('click', function() {
     			var index,group,tag;
@@ -63,10 +84,10 @@
     			self.open();
     			self.goto(index);
 
+                $(window).on('resize.popup', $.proxy(self.resize, self));
+                
     			return false;
     		});
-
-            $(window).on('resize', $.proxy(this.resize, this));
     	},
 
     	filterGroup: function(tag, collects) {
@@ -97,6 +118,7 @@
                     url =  $(v).attr('href'),
                     obj = {
                         url: url,
+                        target: v,
                         type: self.options.type || self.checkType(url) 
                     };
 
@@ -161,6 +183,7 @@
     	open: function() {
     		this.create();
     		this.active = true;
+            current = this;
     	},
     	goto: function(index) {
     		var dtd = $.Deferred(),
@@ -173,13 +196,21 @@
     		this.type = this.settings.type || item.type;
     		this.url = item.url;
 
+            // history
+            // fixme: control hasEmit value accuratly
+            hashEmit = false;
+            window.location.hash = '#' + $(item.target).attr('popup-Id');
+            setTimeout(function() {
+                hashEmit = true;
+            }, 0);
+
     		this.$container.addClass(this.namespace + '-' + item.type + '-holder');
 
             this.showLoading();
     		this.types[item.type].load(this, dtd);
     		this.$container.trigger('change.popup', this);
 
-    		dtd.done(function($data) {
+    		dtd.done(function($data) {              
                 self.$close.css({display: 'block'});
     			self.$content.empty().append($data);
     			self.afterLoad();
@@ -222,6 +253,19 @@
                 
             }, 17);
 
+            $(window).off('resize.popup');
+
+            // hash
+            hashEmit = false;
+            window.location.hash = '';
+            setTimeout(function() {
+                hashEmit = true;
+            }, 0);
+
+            current = null;
+
+            this.active = false;
+
             self.$overlay.remove();
             self.$wrap.remove();
             $('body').removeClass(self.namespace + '-body');
@@ -236,10 +280,29 @@
             }
         },
         bindEvent: function() {
+            var self = this;
             this.$close.on('click', $.proxy(this.close, this));
-            this.$wrap.on('click', function(e) {
-                console.log(e.target);
-            });
+       
+            if (this.options.winBtn === true) {
+                this.$wrap.on('click.popup', function(e) {
+                    if ($(e.target).hasClass('.' + self.namespace + '-container')) {
+                        self.close.call(self);
+                    } 
+                    return false;
+                });
+            }
+
+            if (this.isGroup === true && this.options.keyboard === true) {
+                this.keyboard.attach({
+                    escape: $.proxy(this.close,this),
+                    left: $.proxy(this.prev,this),
+                    right: $.proxy(this.next,this)
+                });
+            }
+        },
+        unbindEvent: function() {
+            this.keyboard.detach();
+            this.$wrap.off('click.popup');
         },
 
     	// helper function
@@ -272,6 +335,13 @@
     	theme: 'default',
     	transition: 'fade',
 
+        winBtn: true,
+        keyboard: true,
+
+        // slider
+        autoPlay: true,
+        playSpeed: 300,
+
         // do we need a render ?
         render: function(data) {
             return data;
@@ -287,6 +357,7 @@
             }
         },
 
+        // type settings
         ajax: {
             // expect return html string
             render: function(data) {
@@ -334,6 +405,7 @@
             source: null
         },
 
+        // template
     	tpl: {
     		overlay: '<div class="popup-overlay"></div>',
     		container: '<div class="popup-wrap"><div class="popup-container"><div class="popup-content-wrap"><div class="popup-content"></div></div></div></div>',    
@@ -365,7 +437,6 @@
     					}
 
     					timer = setInterval(function() {
-
     						if (img.naturalWidth > 0) {
     							callback();
     							clearInterval(timer);
@@ -605,11 +676,75 @@
         }
     };
 
+    Popup.prototype.keyboard = {
+        keys : {
+            'UP': 38,
+            'DOWN': 40,
+            'LEFT': 37,
+            'RIGHT': 39,
+            'RETURN': 13,
+            'ESCAPE': 27,
+            'BACKSPACE': 8,
+            'SPACE': 32
+        },
+        map : {},
+        bound: false,
+        press: function(e) {
+            var key = e.keyCode || e.which;
+            if ( key in this.map && typeof this.map[key] === 'function' ) {
+                this.map[key]();
+            }
+        },
+        attach: function(map) {
+            var key, up;
+            for( key in map ) {
+                if ( map.hasOwnProperty( key ) ) {
+                    up = key.toUpperCase();
+                    if ( up in this.keys ) {
+                        this.map[ this.keys[up] ] = map[key];
+                    } else {
+                        this.map[ up ] = map[key];
+                    }
+                }
+            }
+            if ( !this.bound ) {
+                this.bound = true;
+                $(document).bind('keydown', $.proxy(this.press, this));
+            }
+        },
+        detach: function() {
+            this.bound = false;
+            this.map = {};
+            $(document).unbind('keydown', this.press);
+        }
+    };
+    Popup.prototype.slider = {
+        timer: {},
+        clear: function() {
+            clearTimeout(this.timer);
+        },
+        set: function(instance) {
+            this.clear();
+            if (instance.isGroup) {
+                this.timer = setTimeout($.proxy(instance.next,instance),instance.options.playSpeed);
+            }  
+        },
+        play: function(instance) {
+            instance.isPaused = false;
+            this.set(instance);
+        },
+        pause: function(instance) {
+            this.clear();
+            instance.current.isPaused = true;
+        }
+    };
+
     $.extend(Popup, {
-    	
+    	registerType: function() {},
+        registerComponent: function(){}
     });
 
-    $.fn.popup = function(options) {
+    $.fn.popup = function(options) {    
 
     	if (typeof options === 'string') {
             var method = options;
@@ -622,11 +757,61 @@
                 }
             });
         } else {
-            if (!$.data(this, 'popup')) {
-                $.data(this, 'popup', new Popup(this, options));
+            if (!$(this).data('popup')) {
+                $(this).data('popup', new Popup(this, options)); 
             }
         }
     };
 
+    // for history
+    function parseHash(hash) {
+        var arr = hash.split('/');
+        return {
+            id: hash.replace('#',''),
+            index: parseInt(arr[2]) || 0
+        }
+    }
+
+    // open hash when use browser navigate
+    $(window).on('hashchange.popup', function() {
+       
+        if (!hashEmit) {
+            return false;
+        }
+
+        var hash = window.location.hash,
+            result = parseHash(hash),
+            $element = $('[popup-id="'+ result.id +'"]'),
+            instance = $element.data('popup'); 
+
+        if (!instance) {
+            if (current) {
+                current.close();
+            }
+            return false;
+        }
+
+        if (instance.active === true) {
+            instance.goto(result.index);
+        } else {
+            $element.click();
+        }
+    });
+
+    // fixme: 'popup' use namespace
+    if ($.type(hash) === 'string' &&  hash.match(/(popup)/i)) {
+        var result = parseHash(hash);
+
+        setTimeout(function() {
+            var $element = $('[popup-Id="' + result.id +'"]'),
+                instance = $element.data('popup');
+
+            if (instance.active === true) {
+                instance.goto(result.index);
+            } else {
+                $element.click();
+            }
+        }, 17);
+    }
 
 })(jQuery, document, window);

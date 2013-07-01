@@ -19,6 +19,8 @@ jQuery(function($) {
 });
 </script>
 ```
+## UX
+http://37signals.com/svn/posts/1149-modal-overlays-beyond-the-dialog-box
 
 ## Documentation
 _(Coming soon)_

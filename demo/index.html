@@ -155,26 +155,26 @@
             </section>
 
             <section>
-                <h3>Gallery: slide effect</h3>
+                <h3>Gallery with thumbnail</h3>
                 <pre class="has-example"><code class="language-markup">
 </code></pre>
                 <div class="example">
-                    <a class="popup-slide" href="img/1_b.jpg" data-popup-title="img0" data-popup-group="gallery5" data-popup-autoSize="false"><img src="img/1_b.jpg" alt="" /></a>
-                    <a class="popup-slide" href="img/2_b.jpg" data-popup-title="img1" data-popup-group="gallery5"><img src="img/2_b.jpg" alt="" /></a>
-                    <a class="popup-slide" href="img/3_b.jpg" data-popup-title="img2" data-popup-group="gallery5"><img src="img/3_b.jpg" alt="" /></a>
-                    <a class="popup-slide" href="img/4_b.jpg" data-popup-title="img3" data-popup-group="gallery5"><img src="img/4_b.jpg" alt="" /></a>
-                    <a class="popup-slide" href="img/5_b.jpg" data-popup-title="img4" data-popup-group="gallery5"><img src="img/5_b.jpg" alt="" /></a>
+                    <a class="popup-thumb" href="img/1_b.jpg" data-popup-thumb="img/1_b.jpg" data-popup-title="img0" data-popup-group="gallery5"><img src="img/1_b.jpg" alt="" /></a>
+                    <a class="popup-thumb" href="img/2_b.jpg" data-popup-thumb="img/2_b.jpg" data-popup-title="img1" data-popup-group="gallery5"><img src="img/2_b.jpg" alt="" /></a>
+                    <a class="popup-thumb" href="img/3_b.jpg" data-popup-thumb="img/3_b.jpg" data-popup-title="img2" data-popup-group="gallery5"><img src="img/3_b.jpg" alt="" /></a>
+                    <a class="popup-thumb" href="img/4_b.jpg" data-popup-thumb="img/4_b.jpg" data-popup-title="img3" data-popup-group="gallery5"><img src="img/4_b.jpg" alt="" /></a>
+                    <a class="popup-thumb" href="img/5_b.jpg" data-popup-thumb="img/5_b.jpg" data-popup-title="img4" data-popup-group="gallery5"><img src="img/5_b.jpg" alt="" /></a>
                 </div>
             </section>
             <section>
-                <h3>Gallery: with auto play</h3>
+                <h3>Gallery with auto slide</h3>
                 <pre class="has-example"><code class="language-markup">
 </code></pre>
                 <div class="example">
-                    <a class="popup1" href="img/fix-1.jpg" data-popup-title="img-fix-0" data-popup-group="gallery2"><img style="width:100px,height:100px" src="img/fix-1.jpg" alt="" /></a>
-                    <a class="popup1" href="img/fix-2.jpg" data-popup-title="img-fix-1" data-popup-group="gallery2"><img style="width:100px,height:100px" src="img/fix-2.jpg" alt="" /></a>
-                    <a class="popup1" href="img/fix-3.jpg" data-popup-title="img-fix-2" data-popup-group="gallery2"><img style="width:100px,height:100px" src="img/fix-3.jpg" alt="" /></a>
-                    <a class="popup1" href="img/fix-4.jpg" data-popup-title="img-fix-3" data-popup-group="gallery2"><img style="width:100px,height:100px" src="img/fix-4.jpg" alt="" /></a>
+                    <a class="popup-autoSlide" href="img/fix-1.jpg" data-popup-title="img-fix-0" data-popup-group="gallery2"><img style="width:100px,height:100px" src="img/fix-1.jpg" alt="" /></a>
+                    <a class="popup-autoSlide" href="img/fix-2.jpg" data-popup-title="img-fix-1" data-popup-group="gallery2"><img style="width:100px,height:100px" src="img/fix-2.jpg" alt="" /></a>
+                    <a class="popup-autoSlide" href="img/fix-3.jpg" data-popup-title="img-fix-2" data-popup-group="gallery2"><img style="width:100px,height:100px" src="img/fix-3.jpg" alt="" /></a>
+                    <a class="popup-autoSlide" href="img/fix-4.jpg" data-popup-title="img-fix-3" data-popup-group="gallery2"><img style="width:100px,height:100px" src="img/fix-4.jpg" alt="" /></a>
                 </div>
             </section>
             <section>
@@ -236,7 +236,7 @@
           $('#toc').toc();
         })();
         $(document).ready(function() {
-            console.log('ready')
+
           $('.popup-image').popup();  
           $('.popup-iframe').popup(); 
           $('.popup-inline').popup(); 
@@ -244,7 +244,9 @@
           $('.popup-swf').popup(); 
           $('.popup-html5').popup(); 
           $('.popup-gallery').popup();
-          // $('.popup1').Popup({autoPlay:true,skin: 'skinSimple'});
+          $('.popup-thumb').popup({thumbnail: true});
+          $('.popup-autoSlide').popup({autoSlide:true});
+
           // $('.popup-gallery').Popup({width:720,height:480,skin:'skinRimless'});
           // $('.popup-slide').Popup({sliderEffect: 'slide'});
                  

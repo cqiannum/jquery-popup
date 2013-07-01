@@ -42,9 +42,6 @@
         this.options = $.extend({}, Popup.defaults, this.themes[options.theme], options);
         this.namespace = this.options.namespace;
 
-        var comps =  this.themes[options.theme] || '';
-        this.comps = comps.split(',');
-
         this.init();
 
     };
@@ -167,13 +164,6 @@
     			this.$prev.on('click', $.proxy(this.prev, this));
     		}
 
-    		// initial custom component
-    		$.each(this.comps, function(i,v) {
-    			if (self.components[v]) {
-    				self.components[v].init(self);
-    			}		
-    		});
-
             $doc.trigger('popup::create', this);
 
     		this.$overlay.addClass(this.namespace + '-' + this.options.transition + '-open');
@@ -206,17 +196,16 @@
 
             // history
             // fixme: control hasEmit value accuratly, add to event
-            hashEmit = false;
-            window.location.hash = '#' + $(item.target).attr('popup-Id');
-            setTimeout(function() {
-                hashEmit = true;
-            }, 0);
+            // hashEmit = false;
+            // window.location.hash = '#' + $(item.target).attr('popup-Id');
+            // setTimeout(function() {
+            //     hashEmit = true;
+            // }, 0);
 
     		this.$container.addClass(this.namespace + '-' + item.type + '-holder');
 
             this.showLoading();
     		this.types[item.type].load(this, dtd);
-    		this.$container.trigger('change.popup', this);
 
     		dtd.done(function($data) {              
                 self.$close.css({display: 'block'});
@@ -342,8 +331,8 @@
         keyboard: true,
 
         // slider
-        autoSlide: true,
-        playSpeed: 300,
+        autoSlide: false,
+        playSpeed: 1500,
 
         // do we need a render ?
         render: function(data) {
@@ -407,6 +396,9 @@
             // ]
             source: null
         },
+
+        // components
+        thumbnail: false,
 
         // template
     	tpl: {
@@ -889,11 +881,11 @@
     var $doc = $(document);
     var thumbnail = {
         tpl: '<div class="popup-thumb-wrap">' + 
-                '<button class="popup-thumb-prev" alt="prev"></button>' +
+                '<button class="popup-thumb-prev" alt="prev">prev</button>' +
                 '<div class="popup-thumb">' +
-                    '<ul class="popup-thumb-itmes"></ul>' +
+                    '<ul class="popup-thumb-items"></ul>' +
                 '</div>' +
-                '<button class="popup-thumb-prev" alt="next"></buttom>' +
+                '<button class="popup-thumb-prev" alt="next">next</buttom>' +
              '</div>',
         map: {
             none: '',
@@ -902,7 +894,6 @@
             vhtml5: ''
         },
 
-        //main 
         init: function(instance) {
             var items = '',
                 self = this,
@@ -910,9 +901,13 @@
 
             this.$tpl = $(this.tpl);
             this.$thumb = this.$tpl.find('.popup-thumb');
-            this.$items = this.$tpl.find('.popup-thumb-itmes');
+            this.$items = this.$tpl.find('.popup-thumb-items');
             this.$prev = this.$tpl.find('.popup-thumb-prev');
             this.$next = this.$tpl.find('.popup-thumb-next');
+
+            this.total = data.length;
+            this.index = 0;
+            this.posIndex = 0;
 
             //here add thumbnail
             $.each(data, function(i,v) {
@@ -929,45 +924,83 @@
                 $('<li></li>').append(img).appendTo(self.$items);
             });
 
-            this.active(instance.index);     
+            // fixme: change this ugly code
+            this.$items.css({
+                width: this.total * 75
+            });
 
-            this.$prev.on('click',function() { $.proxy(self.move,self)('left'); });
-            this.$next.on('click',function() { $.proxy(self.move,self)('right'); });
+            // this.active(instance.index);     
+
+            this.$prev.on('click', $.proxy(this.prev,this));
+            this.$next.on('click', $.proxy(this.prev,this));
             this.$thumb.delegate('li','click',function(event) {
                 var index = self.$items.find('li').index(this);
                 instance.goto(index);
+                return false;
             });
 
+            this.$tpl.appendTo(instance.$container);
         },
-        close: function(){
+        close: function(instance){
             this.unbindEvent();
             this.$tpl.remove();
+            instance.$container.removeClass('popup-thumb-layout');
         },
         active: function(index) {
             var className = 'popup-thumb-active';
-            this.$itmes.find('.popup-thumb-active').removeClass(className);
-            this.$itmes.find('li').eq(index).addClass(className);
+            this.$items.find('.popup-thumb-active').removeClass(className);
+            this.$items.find('li').eq(index).addClass(className);
 
+            this.index = index;
             this.resetPos(index);
         },
         resetPos: function(index) {
-            
+            var value = index * 75;
+            this.posIndex = index;
+            this.$items.css({
+                'margin-left': -value
+            });
+        },
+        prev: function() {
+            var index = this.posIndex;
+            index--;
+            if (index < 0) {
+                index = this.total - 1;
+            }
+            this.resetPos(index);
+            return false;
+        },
+        next: function() {
+            var index = this.posIndex;
+            index++;
+            if (index >= this.total) {
+                index = 0;
+            }
+            this.resetPos(index);
+            return false;
+        },
+        unbindEvent: function() {
+            this.$prev.off('click');
+            this.$next.off('click');
+            this.$items.undelegate('click');
         }
     };
 
     $doc.on('popup::create', function(event,instance) {
-        if (instance.options.components.thumbnail) {
+        if (instance.options.thumbnail) {
+            instance.$container.addClass('popup-thumb-layout');
             thumbnail.init(instance);
         }
     });
     $doc.on('popup::change', function(event,instance) {
-        if (instance.options.components.thumbnail) {
-            thumbnail.goto(instance);
+        if (instance.options.thumbnail) {
+            thumbnail.active(instance.index);
         }
     });
     $doc.on('popup::close', function(event,instance) {
-        if (instance.options.components.thumbnail) {
+        if (instance.options.thumbnail) {
             thumbnail.close(instance);
         }
     });
+
 })();

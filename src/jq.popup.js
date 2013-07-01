@@ -700,6 +700,28 @@
 
 })(jQuery, document, window);
 
+
+
+// // event test
+// var $doc = $(document);
+
+// $doc.on('popup::create', function(instance) {
+//     console.log('create');
+// });
+
+// $doc.on('popup::init', function(instance) {
+//     console.log('init');
+// });
+
+// $doc.on('popup::close', function(instance) {
+//     console.log('close');
+// });
+
+// $doc.on('popup::change', function(instance) {
+//     console.log('change');
+// });
+
+
 // keyboard plugin
 (function(undefined) {
     var $doc = $(document);
@@ -764,26 +786,6 @@
         return false;
     })
 })();
-
-// // event test
-// var $doc = $(document);
-
-// $doc.on('popup::create', function(instance) {
-//     console.log('create');
-// });
-
-// $doc.on('popup::init', function(instance) {
-//     console.log('init');
-// });
-
-// $doc.on('popup::close', function(instance) {
-//     console.log('close');
-// });
-
-// $doc.on('popup::change', function(instance) {
-//     console.log('change');
-// });
-
 
 // history plugin
 (function(undefined) {
@@ -886,119 +888,70 @@
 (function(undefined) {
     var $doc = $(document);
     var thumbnail = {
-        defaults: {
-            meida: ['screen','ipad'],
-            tpl: {
-                wrap:'<div class="popup-thumbnails"></div>',
-                holder: '<div class="popup-thumbnails-holder"></div>',
-                inner: '<div class="popup-thumbails-inner"></div>',
-                item: '<a class="thumb-loading" href="javascript:;"><span></span></a>',
-                next: '<a title="Next" class="popup-thumbnails-next" href="javascript:;"></a>',
-                prev: '<a title="Previous" class="popup-thumbnails-prev" href="javascript:;"></a>'
-            },
-            map: {
-                none: '',
-                iframe: '',
-                ajax: '',
-                vhtml5: ''
-            }
-        },  
-        build: function() {
-            var tpl = this.opts.tpl;
-
-            this.$wrap = $(tpl.wrap);
-            this.$holder = $(tpl.holder);
-            this.$inner = $(tpl.inner).appendTo(this.$holder);
-            this.$prev = $(tpl.prev);
-            this.$next = $(tpl.next);
-
-            //this.$inner.css({position:'absolute',top:0,left:0});
-
-            var self = this;
-
-            this.$prev.add(this.$holder).add(this.$next).appendTo(this.$wrap);
-
-            this.$wrap.appendTo($('.popup-container'));
-        },
-        active: function(index) {
-            var act = 'popup-thumbnail-active';
-            this.$holder.find('.popup-thumbnail-active').removeClass(act);
-            this.$holder.find('a').eq(index).addClass(act);
-
-            this.resetPos(index);
+        tpl: '<div class="popup-thumb-wrap">' + 
+                '<button class="popup-thumb-prev" alt="prev"></button>' +
+                '<div class="popup-thumb">' +
+                    '<ul class="popup-thumb-itmes"></ul>' +
+                '</div>' +
+                '<button class="popup-thumb-prev" alt="next"></buttom>' +
+             '</div>',
+        map: {
+            none: '',
+            iframe: '',
+            ajax: '',
+            vhtml5: ''
         },
 
         //main 
-        init: function(instance,options) {
-            var $items,
+        init: function(instance) {
+            var items = '',
                 self = this,
-                chunks = [],
-                data = instance.dataPool.content,
-                opts = $.extend(true,this.opts,this.defaults,options);
+                data = instance.group;
+
+            this.$tpl = $(this.tpl);
+            this.$thumb = this.$tpl.find('.popup-thumb');
+            this.$items = this.$tpl.find('.popup-thumb-itmes');
+            this.$prev = this.$tpl.find('.popup-thumb-prev');
+            this.$next = this.$tpl.find('.popup-thumb-next');
 
             //here add thumbnail
-            $.each(data,function(key,value) {
-                if (value.thumb) {
-                    chunks.push(value.thumb);
+            $.each(data, function(i,v) {
+                var url,img = new Image(); 
+                if (v.options && v.options.thumb) {
+                    url = v.options.thumb;
+                } else if (self.map[v.type]){
+                    url = self.map[v.type];
                 } else {
-                    if (value.type === "image") {
-                        chunks.push(value.url);
-                    } else if (opts.map[value.type]) {
-                        chunks.push(opts.map[value.type]);
-                    } else {
-                        chunks.push(opts.map['none']);
-                    }
+                    url = sel.map.none;
                 }
+
+                img.src = url;
+                $('<li></li>').append(img).appendTo(self.$items);
             });
-
-
-
-            this.addChunk(chunks);
-
-
-            this.build();  
-
-
-            $items = this.$holder.find('a');  
-
-            this._position();
-
-            //add to DOM
 
             this.active(instance.index);     
 
             this.$prev.on('click',function() { $.proxy(self.move,self)('left'); });
             this.$next.on('click',function() { $.proxy(self.move,self)('right'); });
-            this.$holder.delegate('a','click',function(event) {
-                var index = $items.index(event.currentTarget);
-                instance.show(index);
+            this.$thumb.delegate('li','click',function(event) {
+                var index = self.$items.find('li').index(this);
+                instance.goto(index);
             });
 
-            instance.$container.on('change.popup',function() {
-                self.active(instance.index);
-            });
-            instance.$container.on('dataChange.popup',function(arr) {
-                //maybe it need some work
-                
-                $.proxy(self.addChunk,self)(arr);
-            });
-            instance.$container.on('close.popup',$.proxy(self.close,self));
-        },
-        goto: function() {},
-        load: function(instance) {
-            var $items = this.$holder.find('a');
-           
-            $.each(this.thumbChunk,function(i,v) {
-                $('<img />').load(function() {
-                    $items.eq(i).removeClass('thumb-loading').append($(this));
-                }).error(function() {
-                    $items.eq(i).removeClass('thumb-loading').append($(this));
-                }).attr('src', v);
-            });  
-
-            this.loaded = true;
         },
         close: function(){
+            this.unbindEvent();
+            this.$tpl.remove();
+        },
+        active: function(index) {
+            var className = 'popup-thumb-active';
+            this.$itmes.find('.popup-thumb-active').removeClass(className);
+            this.$itmes.find('li').eq(index).addClass(className);
+
+            this.resetPos(index);
+        },
+        resetPos: function(index) {
+            
         }
     };
 

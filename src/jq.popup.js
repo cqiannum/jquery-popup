@@ -16,6 +16,8 @@
     var hashEmit = true;
     var current = null;
 
+    var $doc = $(document);
+
     var Popup = $.popup = function(element, options) {
 
     	this.$element = $(element);
@@ -55,6 +57,8 @@
 
     	init: function() {
     		var self = this;
+
+            $doc.trigger('popup::init', this);
 
             this.$element.each(function(i,v) {
                 var name = $(v).data('popup-group'),
@@ -179,6 +183,9 @@
             this.$loading.appendTo(this.$container);
     		this.$overlay.appendTo('body');
     		this.$wrap.appendTo('body');
+
+
+            this.$container.trigger('popup::create', this);
     	},
     	open: function() {
     		this.create();
@@ -196,8 +203,10 @@
     		this.type = this.settings.type || item.type;
     		this.url = item.url;
 
+            $doc.trigger('popup::change', this);
+
             // history
-            // fixme: control hasEmit value accuratly
+            // fixme: control hasEmit value accuratly, add to event
             hashEmit = false;
             window.location.hash = '#' + $(item.target).attr('popup-Id');
             setTimeout(function() {
@@ -217,6 +226,8 @@
     		});
     	},
     	afterLoad: function() {
+            $doc.trigger('popup::afterLoad', this);
+
             this.resize();
     		if (this.options.preload === true) {
     			this.preload();
@@ -254,6 +265,8 @@
             }, 17);
 
             $(window).off('resize.popup');
+
+            $doc.trigger('popup::close', this);
 
             // hash
             hashEmit = false;
@@ -815,3 +828,51 @@
     }
 
 })(jQuery, document, window);
+
+(function(popup, undefined) {
+    var keyboard = {
+        keys : {
+            'UP': 38,
+            'DOWN': 40,
+            'LEFT': 37,
+            'RIGHT': 39,
+            'RETURN': 13,
+            'ESCAPE': 27,
+            'BACKSPACE': 8,
+            'SPACE': 32
+        },
+        map : {},
+        bound: false,
+        press: function(e) {
+            var key = e.keyCode || e.which;
+            if ( key in this.map && typeof this.map[key] === 'function' ) {
+                this.map[key]();
+            }
+        },
+        attach: function(map) {
+            var key, up;
+            for( key in map ) {
+                if ( map.hasOwnProperty( key ) ) {
+                    up = key.toUpperCase();
+                    if ( up in this.keys ) {
+                        this.map[ this.keys[up] ] = map[key];
+                    } else {
+                        this.map[ up ] = map[key];
+                    }
+                }
+            }
+            if ( !this.bound ) {
+                this.bound = true;
+                $(document).bind('keydown', $.proxy(this.press, this));
+            }
+        },
+        detach: function() {
+            this.bound = false;
+            this.map = {};
+            $(document).unbind('keydown', this.press);
+        }
+    };
+    var init = function() {
+
+    };
+})($.popup);

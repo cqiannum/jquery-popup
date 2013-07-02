@@ -53,13 +53,16 @@
   test('popup::close', function() {
       
   });
+  test('popup::resize', function() {
+      
+  });
 
 
 
 
 
 
-  
+
 
   test('is chainable', function() {
     expect(1);

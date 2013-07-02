@@ -312,3 +312,40 @@
   max-width: 100%;
   max-height: 100%;
 }
+
+.popup-thumb-wrap .popup-thumb .popup-thumb-active {
+  opacity: 0.5;
+}
+
+.we-fade-scale.we-show {
+  opacity: 1;
+  visibility: visible;
+  -webkit-transform: scale(1);
+     -moz-transform: scale(1);
+      -ms-transform: scale(1);
+          transform: scale(1);
+}
+
+.we-fade-scale {
+  opacity: 0;
+  -webkit-transform: scale(0.7);
+     -moz-transform: scale(0.7);
+      -ms-transform: scale(0.7);
+          transform: scale(0.7);
+  -webkit-transition: all 0.3s;
+     -moz-transition: all 0.3s;
+          transition: all 0.3s;
+}
+
+.we-fade-scale-overlay {
+  opacity: 0;
+  visibility: hidden;
+  -webkit-transition: all 0.3s;
+     -moz-transition: all 0.3s;
+          transition: all 0.3s;
+}
+
+.we-fade-scale-overlay.we-show {
+  opacity: 0.65;
+  visibility: visible;
+}

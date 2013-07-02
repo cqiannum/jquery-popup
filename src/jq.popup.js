@@ -43,7 +43,6 @@
         this.namespace = this.options.namespace;
 
         this.init();
-
     };
 
     Popup.prototype = {
@@ -56,18 +55,6 @@
     		var self = this;
 
             $doc.trigger('popup::init', this);
-
-            this.$element.each(function(i,v) {
-                var name = $(v).data('popup-group'),
-                    index = i;
-
-                if (!name) {
-                    popId++;
-                    name = popId;
-                }
-
-                $(v).attr('popup-id','/popup-' + name + '/' + index);
-            });
 
     		this.$element.on('click', function() {
     			var index,group,tag;
@@ -166,7 +153,11 @@
 
             $doc.trigger('popup::create', this);
 
-    		this.$overlay.addClass(this.namespace + '-' + this.options.transition + '-open');
+            // window  effect
+    		this.$overlay.addClass(this.namespace + '-' + this.options.modalEffect + '-open');
+            // just for test
+            this.$contentWrap.addClass(this.options.modalEffect);
+            this.$overlay.addClass(this.options.modalEffect + '-overlay');
 
             // for remove scroll
             $('body').addClass(this.namespace + '-body');
@@ -179,7 +170,6 @@
     	open: function() {
     		this.create();
     		this.active = true;
-            current = this;
     	},
     	goto: function(index) {
     		var dtd = $.Deferred(),
@@ -194,14 +184,6 @@
 
             $doc.trigger('popup::change', this);
 
-            // history
-            // fixme: control hasEmit value accuratly, add to event
-            // hashEmit = false;
-            // window.location.hash = '#' + $(item.target).attr('popup-Id');
-            // setTimeout(function() {
-            //     hashEmit = true;
-            // }, 0);
-
     		this.$container.addClass(this.namespace + '-' + item.type + '-holder');
 
             this.showLoading();
@@ -210,6 +192,10 @@
     		dtd.done(function($data) {              
                 self.$close.css({display: 'block'});
     			self.$content.empty().append($data);
+                // for test
+                self.$contentWrap.addClass('we-show');
+                self.$overlay.addClass('we-show');
+
     			self.afterLoad();
     		});
     	},
@@ -244,32 +230,24 @@
         },
     	close: function() {
             var self = this;
-    	      
-            this.$overlay.removeClass(this.namespace + '-' + this.options.transition + '-open').addClass(this.namespace + '-' + this.options.transition + '-close');
             
+            this.$contentWrap.removeClass('we-show');
+            this.$overlay.removeClass('we-show');
+
             // give time to render css3 transition
             setTimeout(function() {
+                self.$overlay.remove();
+                self.$wrap.remove();
+                $('body').removeClass(self.namespace + '-body');
                 
-            }, 17);
+            }, 300);
 
             $(window).off('resize.popup');
 
             $doc.trigger('popup::close', this);
-
-            // hash
-            hashEmit = false;
-            window.location.hash = '';
-            setTimeout(function() {
-                hashEmit = true;
-            }, 0);
-
             current = null;
 
             this.active = false;
-
-            self.$overlay.remove();
-            self.$wrap.remove();
-            $('body').removeClass(self.namespace + '-body');
     	},
     	preload: function() {
     		return;
@@ -279,6 +257,7 @@
             if (this.type === 'image') {
                 this.types[this.type].resize(this);
             }
+            $doc.trigger('popup::resize', this);
         },
         bindEvent: function() {
             var self = this;
@@ -324,8 +303,9 @@
 
     Popup.defaults = {
     	namespace: 'popup',
+        
     	theme: 'default',
-    	transition: 'fade',
+    	modalEffect: 'we-fade-scale',
 
         winBtn: true,
         keyboard: true,
@@ -713,6 +693,10 @@
 //     console.log('change');
 // });
 
+// $doc.on('popup::resize', function(instance) {
+//     console.log('resize');
+// });
+
 
 // keyboard plugin
 (function(undefined) {
@@ -779,63 +763,90 @@
     })
 })();
 
-// history plugin
-(function(undefined) {
-    var hash = window.location.hash;
-    var popId = 0;
-    var hashEmit = true;
-    var current = null;
-    // for history
-    function parseHash(hash) {
-        var arr = hash.split('/');
-        return {
-            id: hash.replace('#',''),
-            index: parseInt(arr[2]) || 0
-        }
-    }
+// // history plugin
+// (function(undefined) {
+//     var hash = window.location.hash;
+//     var popId = 0;
+//     var hashEmit = true;
+//     var current = null;
+//     // for history
+//     function parseHash(hash) {
+//         var arr = hash.split('/');
+//         return {
+//             id: hash.replace('#',''),
+//             index: parseInt(arr[2]) || 0
+//         }
+//     }
 
-    // open hash when use browser navigate
-    $(window).on('hashchange.popup', function() {
+//     this.$element.each(function(i,v) {
+//         var name = $(v).data('popup-group'),
+//             index = i;
+
+//         if (!name) {
+//             popId++;
+//             name = popId;
+//         }
+
+//         $(v).attr('popup-id','/popup-' + name + '/' + index);
+//     });
+
+//     // hash close
+//     hashEmit = false;
+//     window.location.hash = '';
+//     setTimeout(function() {
+//         hashEmit = true;
+//     }, 0);
+
+//     // history
+//     fixme: control hasEmit value accuratly, add to event
+//     hashEmit = false;
+//     window.location.hash = '#' + $(item.target).attr('popup-Id');
+//     setTimeout(function() {
+//         hashEmit = true;
+//     }, 0);
+
+//     // open hash when use browser navigate
+//     $(window).on('hashchange.popup', function() {
        
-        if (!hashEmit) {
-            return false;
-        }
+//         if (!hashEmit) {
+//             return false;
+//         }
 
-        var hash = window.location.hash,
-            result = parseHash(hash),
-            $element = $('[popup-id="'+ result.id +'"]'),
-            instance = $element.data('popup'); 
+//         var hash = window.location.hash,
+//             result = parseHash(hash),
+//             $element = $('[popup-id="'+ result.id +'"]'),
+//             instance = $element.data('popup'); 
 
-        if (!instance) {
-            if (current) {
-                current.close();
-            }
-            return false;
-        }
+//         if (!instance) {
+//             if (current) {
+//                 current.close();
+//             }
+//             return false;
+//         }
 
-        if (instance.active === true) {
-            instance.goto(result.index);
-        } else {
-            $element.click();
-        }
-    });
+//         if (instance.active === true) {
+//             instance.goto(result.index);
+//         } else {
+//             $element.click();
+//         }
+//     });
 
-    // fixme: 'popup' use namespace
-    // if ($.type(hash) === 'string' &&  hash.match(/(popup)/i)) {
-    //     var result = parseHash(hash);
+//     // fixme: 'popup' use namespace
+//     // if ($.type(hash) === 'string' &&  hash.match(/(popup)/i)) {
+//     //     var result = parseHash(hash);
 
-    //     setTimeout(function() {
-    //         var $element = $('[popup-Id="' + result.id +'"]'),
-    //             instance = $element.data('popup');
+//     //     setTimeout(function() {
+//     //         var $element = $('[popup-Id="' + result.id +'"]'),
+//     //             instance = $element.data('popup');
 
-    //         if (instance.active === true) {
-    //             instance.goto(result.index);
-    //         } else {
-    //             $element.click();
-    //         }
-    //     }, 17);
-    // }
-})();
+//     //         if (instance.active === true) {
+//     //             instance.goto(result.index);
+//     //         } else {
+//     //             $element.click();
+//     //         }
+//     //     }, 17);
+//     // }
+// })();
 
 // slider plugin
 (function(undefined) {
@@ -908,6 +919,8 @@
             this.total = data.length;
             this.index = 0;
             this.posIndex = 0;
+            this.showCount = 8;
+            this.width = 75;
 
             //here add thumbnail
             $.each(data, function(i,v) {
@@ -927,9 +940,7 @@
             // fixme: change this ugly code
             this.$items.css({
                 width: this.total * 75
-            });
-
-            // this.active(instance.index);     
+            });   
 
             this.$prev.on('click', $.proxy(this.prev,this));
             this.$next.on('click', $.proxy(this.prev,this));
@@ -940,6 +951,9 @@
             });
 
             this.$tpl.appendTo(instance.$container);
+
+            this.resize(instance);
+            this.active(instance.index); 
         },
         close: function(instance){
             this.unbindEvent();
@@ -956,7 +970,17 @@
         },
         resetPos: function(index) {
             var value = index * 75;
-            this.posIndex = index;
+
+            if (index >= this.posIndex && index < this.showCount + this.posIndex) {
+                return false;
+            } else if (index < this.posIndex) {
+                this.posIndex = index;
+                value = index * this.width;
+            } else {
+                this.posIndex = this.showCount + 2 * this.posIndex - index + 1;
+                value = this.posIndex * this.width;
+            }
+            
             this.$items.css({
                 'margin-left': -value
             });
@@ -983,6 +1007,29 @@
             this.$prev.off('click');
             this.$next.off('click');
             this.$items.undelegate('click');
+        },
+        setShowCount: function(index) {
+            this.showCount = index;
+            if (this.total < this.showCount) {
+                this.showCount = this.total;
+            }
+        },
+        resize: function(instance) {
+            var index,
+                viewport = instance.$container.width();
+            
+            // fixme: just for demo
+            if (viewport < 500) {
+                this.$tpl.css({display: 'none'});
+                instance.$container.removeClass('popup-thumb-layout');
+                return false;
+            } else {
+                this.$tpl.css({display: 'block'});
+                instance.$container.addClass('popup-thumb-layout');
+            }
+
+            index = Math.round(viewport * 0.8 / this.width);
+            this.setShowCount(index);
         }
     };
 
@@ -1002,5 +1049,14 @@
             thumbnail.close(instance);
         }
     });
+    $doc.on('popup::resize', function(event,instance) {
+        if (instance.options.thumbnail) {
+            thumbnail.resize(instance);
+        }
+    });
+})();
+
+// modal effect
+(function(undefined) {
 
 })();

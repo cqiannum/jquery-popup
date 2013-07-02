@@ -85,7 +85,7 @@ module.exports = function(grunt) {
         },
         recess: {
             core: {
-                src: ["less/core.less"],
+                src: ["less/core.less","less/WindowEffect.less"],
                 dest: 'demo/css/core.css',
                 options: {
                     compile: true

@@ -139,6 +139,7 @@
             this.$loading = $(options.tpl.loading);
     		this.$container = this.$wrap.find('.' + this.namespace + '-container');
             this.$contentWrap = this.$container.find('.' + this.namespace + '-content-wrap');
+            this.$contentHolder = this.$contentWrap.find('.' + this.namespace + '-content-holder');
     		this.$content = this.$container.find('.' + this.namespace + '-content');
 
             this.bindEvent();
@@ -192,9 +193,12 @@
     		dtd.done(function($data) {              
                 self.$close.css({display: 'block'});
     			self.$content.empty().append($data);
+
                 // for test
-                self.$contentWrap.addClass('we-show');
-                self.$overlay.addClass('we-show');
+                setTimeout(function() {
+                    self.$contentWrap.addClass('we-show');
+                    self.$overlay.addClass('we-show');
+                }, 0);
 
     			self.afterLoad();
     		});
@@ -243,10 +247,7 @@
             }, 300);
 
             $(window).off('resize.popup');
-
             $doc.trigger('popup::close', this);
-            current = null;
-
             this.active = false;
     	},
     	preload: function() {
@@ -303,9 +304,11 @@
 
     Popup.defaults = {
     	namespace: 'popup',
-        
+
     	theme: 'default',
-    	modalEffect: 'we-fade-scale',
+
+        // thanks to http://tympanus.net/Development/ModalWindowEffects/
+    	modalEffect: 'we-fall',
 
         winBtn: true,
         keyboard: true,
@@ -383,7 +386,7 @@
         // template
     	tpl: {
     		overlay: '<div class="popup-overlay"></div>',
-    		container: '<div class="popup-wrap"><div class="popup-container"><div class="popup-content-wrap"><div class="popup-content"></div></div></div></div>',    
+    		container: '<div class="popup-wrap"><div class="popup-container"><div class="popup-content-wrap"><div class="popup-content-holder"><div class="popup-content"></div></div></div></div></div>',    
             loading: '<div class="popup-loading">loading...</div>',
 
             // here use buttom but <a> element

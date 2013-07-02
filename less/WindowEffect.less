@@ -12,6 +12,7 @@
 }
 .we-fade-scale {
 	opacity: 0;
+	visibility: hidden;
 
 	-webkit-transform: scale(0.7);
 	-moz-transform: scale(0.7);
@@ -32,6 +33,92 @@
 	transition: all 0.3s;
 }
 .we-fade-scale-overlay.we-show {
-	opacity: 0.65;
+	opacity: 0.75;
+	visibility: visible;
+}
+
+// slide-in
+.we-slide-in {
+	opacity: 0;
+	visibility: hidden;
+
+	-webkit-transform: translateX(30%);
+	-moz-transform: translateX(30%);
+	-ms-transform: translateX(30%);
+	transform: translateX(30%);
+
+	-webkit-transition: all 0.3s cubic-bezier(0.25, 0.5, 0.5, 0.9);
+	-moz-transition: all 0.3s cubic-bezier(0.25, 0.5, 0.5, 0.9);
+	transition: all 0.3s cubic-bezier(0.25, 0.5, 0.5, 0.9);
+}
+
+.we-slide-in.we-show {
+	visibility: visible;
+	opacity: 1;
+
+	-webkit-transform: translateX(0);
+	-moz-transform: translateX(0);
+	-ms-transform: translateX(0);
+	transform: translateX(0);
+	
+}
+
+.we-slide-in-overlay {
+	visibility: hidden;
+	opacity: 0;
+
+	-webkit-transition: all 0.3s;
+	-moz-transition: all 0.3s;
+	transition: all 0.3s;
+}
+.we-slide-in-overlay.we-show {
+	opacity: 0.75;
+	visibility: visible;
+}
+
+
+// fall
+.we-fall {
+	opacity: 0;
+	visibility: hidden;
+
+	-webkit-transform-style: preserve-3d;
+	-moz-transform-style: preserve-3d;
+	transform-style: preserve-3d;
+
+	-webkit-transform: translateZ(600px) rotateX(20deg);
+	-moz-transform: translateZ(600px) rotateX(20deg);
+	-ms-transform: translateZ(600px) rotateX(20deg);
+	transform: translateZ(600px) rotateX(20deg);
+
+	-webkit-perspective: 1300px;
+	-moz-perspective: 1300px;
+	perspective: 1300px;
+	
+}
+.we-show {
+	visibility: visible;
+	opacity: 1;
+
+	-webkit-transition: all 0.3s ease-in;
+	-moz-transition: all 0.3s ease-in;
+	transition: all 0.3s ease-in;
+
+	-webkit-transform: translateZ(0px) rotateX(0deg);
+	-moz-transform: translateZ(0px) rotateX(0deg);
+	-ms-transform: translateZ(0px) rotateX(0deg);
+	transform: translateZ(0px) rotateX(0deg);
+}
+
+.we-fall-overlay {
+	visibility: hidden;
+	opacity: 0;
+
+	-webkit-transition: all 0.3s;
+	-moz-transition: all 0.3s;
+	transition: all 0.3s;
+}
+.we-fall-overlay.we-show {
+	opacity: 0.75;
 	visibility: visible;
 }

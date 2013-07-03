@@ -1,6 +1,6 @@
 
 // effect lib
-.we-fade-scale.we-show {
+.we-fadeScale.we-show {
 	visibility: visible;
 
 	-webkit-transform: scale(1);
@@ -10,7 +10,7 @@
 
 	opacity: 1;
 }
-.we-fade-scale {
+.we-fadeScale {
 	opacity: 0;
 	visibility: hidden;
 
@@ -24,7 +24,7 @@
 	transition: all 0.3s;
 }
 
-.we-fade-scale-overlay {
+.we-fadeScale-overlay {
 	visibility: hidden;
 	opacity: 0;
 
@@ -32,13 +32,13 @@
 	-moz-transition: all 0.3s;
 	transition: all 0.3s;
 }
-.we-fade-scale-overlay.we-show {
+.we-fadeScale-overlay.we-show {
 	opacity: 0.75;
 	visibility: visible;
 }
 
 // slide-in
-.we-slide-in {
+.we-slideIn {
 	opacity: 0;
 	visibility: hidden;
 
@@ -52,7 +52,7 @@
 	transition: all 0.3s cubic-bezier(0.25, 0.5, 0.5, 0.9);
 }
 
-.we-slide-in.we-show {
+.we-slideIn.we-show {
 	visibility: visible;
 	opacity: 1;
 
@@ -60,10 +60,9 @@
 	-moz-transform: translateX(0);
 	-ms-transform: translateX(0);
 	transform: translateX(0);
-	
 }
 
-.we-slide-in-overlay {
+.we-slideIn-overlay {
 	visibility: hidden;
 	opacity: 0;
 
@@ -71,7 +70,7 @@
 	-moz-transition: all 0.3s;
 	transition: all 0.3s;
 }
-.we-slide-in-overlay.we-show {
+.we-slideIn-overlay.we-show {
 	opacity: 0.75;
 	visibility: visible;
 }
@@ -79,6 +78,12 @@
 
 // fall
 .we-fall {
+	-webkit-perspective: 1300px;
+	-moz-perspective: 1300px;
+	perspective: 1300px;
+}
+
+.we-fall .popup-content-holder {
 	opacity: 0;
 	visibility: hidden;
 
@@ -89,14 +94,9 @@
 	-webkit-transform: translateZ(600px) rotateX(20deg);
 	-moz-transform: translateZ(600px) rotateX(20deg);
 	-ms-transform: translateZ(600px) rotateX(20deg);
-	transform: translateZ(600px) rotateX(20deg);
-
-	-webkit-perspective: 1300px;
-	-moz-perspective: 1300px;
-	perspective: 1300px;
-	
+	transform: translateZ(600px) rotateX(20deg);	
 }
-.we-show {
+.we-fall.we-show .popup-content-holder {
 	visibility: visible;
 	opacity: 1;
 

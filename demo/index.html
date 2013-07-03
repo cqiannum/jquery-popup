@@ -138,6 +138,20 @@
             
         </section>
         <section>
+            <h2>Modal Effect</h2>
+            <section>
+                <div class="example modalEffect">
+                    <a class="popup-fadeScale" href="img/1.jpg" data-popup-title="img0"><img src="img/1-thumbnail.jpg" alt="" /></a>
+                    <a class="popup-slideIn" href="img/2.jpg" data-popup-title="img1"><img src="img/2-thumbnail.jpg" alt="" /></a>
+                    <a class="popup-fall" href="img/3.jpg" data-popup-title="img2"><img src="img/3-thumbnail.jpg" alt="" /></a>
+                    <a class="popup-flip" href="img/4.jpg" data-popup-title="img3"><img src="img/4-thumbnail.jpg" alt="" /></a>
+                    <a class="popup-sign" href="img/5.jpg" data-popup-title="img4"><img src="img/5-thumbnail.jpg" alt="" /></a>
+                    <a class="popup-list" href="img/6.jpg" data-popup-title="img5"><img src="img/6-thumbnail.jpg" alt="" /></a>
+                    <a class="popup-rotate" href="img/7.jpg" data-popup-title="img6"><img src="img/7-thumbnail.jpg" alt="" /></a>
+                </div>
+            </section>
+        </section>
+        <section>
             <h2>Group</h2>
             <section>
                 <h3>a simple Gallery</h3>
@@ -246,6 +260,12 @@
           $('.popup-gallery').popup();
           $('.popup-thumb').popup({thumbnail: true});
           $('.popup-autoSlide').popup({autoSlide:true});
+
+          $('.popup-fadeScale').popup({modalEffect: 'we-fadeScale'});
+          $('.popup-slideIn').popup({modalEffect: 'we-slideIn'});
+          $('.popup-fall').popup({modalEffect: 'we-fall'});
+          // $('.popup-flip').popup({modalEffect: 'we-flip'});
+          // $('.popup-sign').popup({modalEffect: 'we-sign'});
 
           // $('.popup-gallery').Popup({width:720,height:480,skin:'skinRimless'});
           // $('.popup-slide').Popup({sliderEffect: 'slide'});

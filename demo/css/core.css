@@ -132,6 +132,31 @@
   vertical-align: middle;
 }
 
+.popup-wrap .popup-container .popup-infoBar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 30px;
+}
+
+.popup-wrap .popup-container .popup-infoBar .popup-title {
+  padding-right: 36px;
+  line-height: 18px;
+  color: #f3f3f3;
+  text-align: left;
+  word-break: break-word;
+}
+
+.popup-wrap .popup-container .popup-infoBar .popup-counter {
+  position: absolute;
+  top: 0;
+  right: 0;
+  font-size: 12px;
+  line-height: 18px;
+  color: #ccc;
+}
+
 .popup-wrap .popup-container .popup-close {
   position: absolute;
   top: 0;
@@ -317,7 +342,7 @@
   opacity: 0.5;
 }
 
-.we-fade-scale.we-show {
+.we-fadeScale.we-show {
   opacity: 1;
   visibility: visible;
   -webkit-transform: scale(1);
@@ -326,7 +351,7 @@
           transform: scale(1);
 }
 
-.we-fade-scale {
+.we-fadeScale {
   opacity: 0;
   visibility: hidden;
   -webkit-transform: scale(0.7);
@@ -338,7 +363,7 @@
           transition: all 0.3s;
 }
 
-.we-fade-scale-overlay {
+.we-fadeScale-overlay {
   opacity: 0;
   visibility: hidden;
   -webkit-transition: all 0.3s;
@@ -346,12 +371,12 @@
           transition: all 0.3s;
 }
 
-.we-fade-scale-overlay.we-show {
+.we-fadeScale-overlay.we-show {
   opacity: 0.75;
   visibility: visible;
 }
 
-.we-slide-in {
+.we-slideIn {
   opacity: 0;
   visibility: hidden;
   -webkit-transform: translateX(30%);
@@ -363,7 +388,7 @@
           transition: all 0.3s cubic-bezier(0.25, 0.5, 0.5, 0.9);
 }
 
-.we-slide-in.we-show {
+.we-slideIn.we-show {
   opacity: 1;
   visibility: visible;
   -webkit-transform: translateX(0);
@@ -372,7 +397,7 @@
           transform: translateX(0);
 }
 
-.we-slide-in-overlay {
+.we-slideIn-overlay {
   opacity: 0;
   visibility: hidden;
   -webkit-transition: all 0.3s;
@@ -380,12 +405,18 @@
           transition: all 0.3s;
 }
 
-.we-slide-in-overlay.we-show {
+.we-slideIn-overlay.we-show {
   opacity: 0.75;
   visibility: visible;
 }
 
 .we-fall {
+  -webkit-perspective: 1300px;
+     -moz-perspective: 1300px;
+          perspective: 1300px;
+}
+
+.we-fall .popup-content-holder {
   opacity: 0;
   visibility: hidden;
   -webkit-transform: translateZ(600px) rotateX(20deg);
@@ -395,12 +426,9 @@
   -webkit-transform-style: preserve-3d;
      -moz-transform-style: preserve-3d;
           transform-style: preserve-3d;
-  -webkit-perspective: 1300px;
-     -moz-perspective: 1300px;
-          perspective: 1300px;
 }
 
-.we-show {
+.we-fall.we-show .popup-content-holder {
   opacity: 1;
   visibility: visible;
   -webkit-transform: translateZ(0) rotateX(0deg);

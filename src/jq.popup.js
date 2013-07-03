@@ -10,12 +10,6 @@
 	// Optional, but considered best practice by some
     "use strict";
 
-    // fixme: test broswers compatibility
-    var hash = window.location.hash;
-    var popId = 0;
-    var hashEmit = true;
-    var current = null;
-
     var $doc = $(document);
 
     var Popup = $.popup = function(element, options) {
@@ -142,6 +136,9 @@
             this.$contentHolder = this.$contentWrap.find('.' + this.namespace + '-content-holder');
     		this.$content = this.$container.find('.' + this.namespace + '-content');
 
+            this.$title = this.$container.find('.' + this.namespace + '-title');
+            this.$counter = this.$container.find('.' + this.namespace + '-counter');
+
             this.bindEvent();
 
     		if (this.isGroup) {
@@ -163,7 +160,7 @@
             // for remove scroll
             $('body').addClass(this.namespace + '-body');
 
-            this.$close.appendTo(this.$contentWrap).css({display: 'none'});
+            this.$close.appendTo(this.$contentHolder).css({display: 'none'});
             this.$loading.appendTo(this.$container);
     		this.$overlay.appendTo('body');
     		this.$wrap.appendTo('body');
@@ -181,6 +178,7 @@
 
     		this.index = index;
     		this.type = this.settings.type || item.type;
+            this.title = this.settings.title;
     		this.url = item.url;
 
             $doc.trigger('popup::change', this);
@@ -193,6 +191,11 @@
     		dtd.done(function($data) {              
                 self.$close.css({display: 'block'});
     			self.$content.empty().append($data);
+                self.$title.text(self.title);
+
+                if (self.isGroup) {
+                    self.$counter.text(self.index + '/' + self.total);
+                }
 
                 // for test
                 setTimeout(function() {
@@ -243,11 +246,10 @@
                 self.$overlay.remove();
                 self.$wrap.remove();
                 $('body').removeClass(self.namespace + '-body');
-                
             }, 300);
 
             $(window).off('resize.popup');
-            $doc.trigger('popup::close', this);
+            $doc.trigger('popup::close', self);
             this.active = false;
     	},
     	preload: function() {
@@ -266,7 +268,7 @@
        
             if (this.options.winBtn === true) {
                 this.$wrap.on('click.popup', function(e) {
-                    if ($(e.target).hasClass('.' + self.namespace + '-container')) {
+                    if ($(e.target).hasClass(self.namespace + '-container')) {
                         self.close.call(self);
                     } 
                     return false;
@@ -304,7 +306,6 @@
 
     Popup.defaults = {
     	namespace: 'popup',
-
     	theme: 'default',
 
         // thanks to http://tympanus.net/Development/ModalWindowEffects/
@@ -386,7 +387,20 @@
         // template
     	tpl: {
     		overlay: '<div class="popup-overlay"></div>',
-    		container: '<div class="popup-wrap"><div class="popup-container"><div class="popup-content-wrap"><div class="popup-content-holder"><div class="popup-content"></div></div></div></div></div>',    
+    		container: '<div class="popup-wrap">' +
+                            '<div class="popup-container">' +
+                                '<div class="popup-content-wrap">' +
+                                    '<div class="popup-content-holder">' +
+                                        '<div class="popup-content">' +
+                                        '</div>' +
+                                        '<div class="popup-infoBar">' +
+                                            '<div class="popup-title"></div>' +
+                                            '<span class="popup-counter"></span>' +
+                                        '</div>' +
+                                    '</div>' +
+                                '</div>' +
+                            '</div>' +
+                        '</div>',    
             loading: '<div class="popup-loading">loading...</div>',
 
             // here use buttom but <a> element
@@ -888,8 +902,6 @@
     })
 })();
 
-// components
-
 // components:: thumbnails
 (function(undefined) {
     var $doc = $(document);
@@ -1059,7 +1071,5 @@
     });
 })();
 
-// modal effect
-(function(undefined) {
 
-})();
+

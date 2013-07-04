@@ -194,7 +194,7 @@
                 self.$title.text(self.title);
 
                 if (self.isGroup) {
-                    self.$counter.text(self.index + '/' + self.total);
+                    self.$counter.text((self.index + 1) + '/' + self.total);
                 }
 
                 // for test
@@ -253,7 +253,8 @@
             this.active = false;
     	},
     	preload: function() {
-    		return;
+    		$doc.trigger('popup::preload', this);
+            return;
     	},
 
         resize: function() {
@@ -317,6 +318,9 @@
         // slider
         autoSlide: false,
         playSpeed: 1500,
+
+        // preload
+        preload: false,
 
         // do we need a render ?
         render: function(data) {
@@ -529,16 +533,6 @@
                 }
             },  
             load: function(instance, dtd) {
-                // var iframe = '<iframe class="' + instance.namespace +'-iframe" src="//about:blank" frameborder="0" allowfullscreen></iframe>',
-                //     $iframe = $(iframe);
-
-                // $iframe.load(function() {
-                //     instance.hideLoading();
-                // });
-
-                // $iframe.attr('src', instance.url);
-                // dtd.resolve($iframe);
-
 
                 // thanks to http://www.planabc.net/2009/09/22/iframe_onload/
                 var iframe = document.createElement("iframe");
@@ -714,10 +708,14 @@
 //     console.log('resize');
 // });
 
+// $doc.on('popup::preload', function(instance) {
+//     console.log('preload');
+// });
 
-// keyboard plugin
-(function(undefined) {
-    var $doc = $(document);
+
+// keyboard 
+(function(doc) {
+    var $doc = $(doc);
     var keyboard = {
         keys : {
             'UP': 38,
@@ -778,7 +776,7 @@
         }
         return false;
     })
-})();
+})(document);
 
 // // history plugin
 // (function(undefined) {
@@ -865,9 +863,9 @@
 //     // }
 // })();
 
-// slider plugin
-(function(undefined) {
-    var $doc = $(document);
+// slider 
+(function(doc) {
+    var $doc = $(doc);
     // fixme: do I really need isPaused property
     var slider = {
         timer: {},
@@ -900,11 +898,17 @@
             slider.pause(instance);
         }
     })
-})();
+})(document);
+
+// retina 
+(function(doc) {
+    var $doc = $(doc);
+
+})(document);
 
 // components:: thumbnails
-(function(undefined) {
-    var $doc = $(document);
+(function(doc) {
+    var $doc = $(doc);
     var thumbnail = {
         tpl: '<div class="popup-thumb-wrap">' + 
                 '<button class="popup-thumb-prev" alt="prev">prev</button>' +
@@ -1069,7 +1073,10 @@
             thumbnail.resize(instance);
         }
     });
-})();
+    $doc.on('popup::preload', function(event, instance) {
+
+    });
+})(document);
 
 
 

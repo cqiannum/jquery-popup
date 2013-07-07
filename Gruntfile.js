@@ -17,9 +17,9 @@ module.exports = function(grunt) {
                 stripBanners: true
             },
             dist: {
-                src: ['src/jquery.<%= pkg.name %>.js'],
+                src: ['src/jquery.popup.js', 'src/popup.keyboard.js', 'src/popup.slider.js', 'src/popup.thumb.js'],
                 dest: 'dist/jquery.<%= pkg.name %>.js'
-            },
+            }
         },
         uglify: {
             options: {
@@ -64,6 +64,18 @@ module.exports = function(grunt) {
                 tasks: ['jshint:test']
             },
         },
+
+        // https://github.com/Darsain/grunt-tagrelease
+        tagrelease: {
+            file: 'package.json',
+            commit:  true,
+            message: 'Release %version%',
+            prefix:  'v',
+            annotate: false
+        },
+
+        // https://github.com/Darsain/grunt-bumpup
+        bumpup: 'package.json',
         jsbeautifier: {
             files: ["Gruntfile.js", "src/**/*.js"],
             options: {
@@ -85,30 +97,12 @@ module.exports = function(grunt) {
         },
         recess: {
             core: {
-                src: ["less/core.less","less/WindowEffect.less"],
+                src: ["less/core.less", "less/WindowEffect.less"],
                 dest: 'demo/css/core.css',
                 options: {
                     compile: true
                 }
             },
-
-            //defaultSkin: {},
-            
-            // skin_skinRimless: {
-            //     src: ["skins/skinRimless/**/*.less","skins/skinRimless/components/**/*.less"],
-            //     dest: 'demo/css/skinRimless.css',
-            //     options: {
-            //         compile: true
-            //     }
-            // },
-
-            // skin_skinSimple: {
-            //     src: ["skins/skinSimple/**/*.less","skins/skinSimple/components/**/*.less"],
-            //     dest: 'demo/css/skinSimple.css',
-            //     options: {
-            //         compile: true
-            //     }
-            // }
         }
     });
 
@@ -122,10 +116,22 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks('grunt-jsbeautifier');
     grunt.loadNpmTasks('grunt-recess');
 
+    grunt.loadNpmTasks('grunt-tagrelease');
+    grunt.loadNpmTasks('grunt-bumpup');
+
     // Default task.
     grunt.registerTask('default', ['jshint', 'jsbeautifier', 'clean', 'concat', 'uglify']);
 
-    grunt.registerTask('js', ['jshint', 'jsbeautifier']);
-
+    grunt.registerTask('js', ['jsbeautifier', 'concat', 'uglify']);
     grunt.registerTask('css', ['recess']);
+    grunt.registerTask('all', ['recess', 'jshint', 'jsbeautifier', 'concat', 'uglify']);
+
+    // Release alias task
+    grunt.registerTask('release', function (type) {
+        type = type ? type : 'patch';
+        grunt.task.run('jshint');         // Lint stuff
+        grunt.task.run('uglify');         // Minify stuff
+        grunt.task.run('bumpup:' + type); // Bump up the package version
+        grunt.task.run('tagrelease');     // Commit & tag the changes from above
+    });
 };

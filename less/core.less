@@ -123,6 +123,7 @@
 
 		// for vertical center
 		// thanks to http://css-tricks.com/centering-in-the-unknown/
+		// another prety way - http://css-tricks.com/centering-percentage-widthheight-elements/?utm_source=Responsive+Design+Weekly&utm_campaign=34e8bc534e-Responsive_Design_Weekly_64&utm_medium=email&utm_term=0_df65b6d7c8-34e8bc534e-58978913
 		&:before {
 			content: '';
 			display: inline-block;
@@ -163,7 +164,7 @@
 				position: absolute;
 				top: 0;
 				right: 0;
-				
+
 				color: #ccc;
 				font-size: 12px;
 				line-height: 18px;
@@ -364,11 +365,16 @@
 	.popup-thumb-layout {
 		padding-bottom: 50px;
 	}
+
+	@media
+	only screen and (-webkit-min-device-pixel-ratio : 1.5) and (orientation:portrait),
+	only screen and (min-device-pixel-ratio : 1.5)  and (orientation:portrait) {
+		
+	}
 }
 
 
 // thumbnail
-
 .popup-thumb-wrap {
 	position: fixed;
 	left: 0;
@@ -414,5 +420,4 @@
 			opacity: 0.5;
 		}
 	}
-	
 }

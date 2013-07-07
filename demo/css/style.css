@@ -503,6 +503,81 @@ pre.wrong {
 	h2, h3 { page-break-after: avoid; }
 }
 
+@media screen and (min-width:800px) and (max-width:959px) {
+body {
+	font-size:1em;
+	line-height:1.618em;
+}
+h1 {
+	font-size:3em;
+	line-height:1.5em;
+}
+h2 {
+	font-size:2em;
+	line-height:1.5em;
+}
+h3 {
+	font-size:1.5em;
+	line-height:1.5em;
+}
+}
+@media screen and (min-width:540px) and (max-width:799px) {
+body {
+	font-size:1em;
+	line-height:1.618em;
+}
+h1 {
+	font-size:2em;
+	line-height:1.5em;
+}
+h2 {
+	font-size:1.5em;
+	line-height:1.5em;
+}
+h3 {
+	font-size:1.2em;
+	line-height:1.5em;
+}
+}
+@media screen and (min-width:480px) and (max-width:539px) {
+body {
+	font-size:1em;
+	line-height:1.618em;
+}
+h1 {
+	font-size:2em;
+	line-height:1.5em;
+}
+h2 {
+	font-size:1.5em;
+	line-height:1.5em;
+}
+h3 {
+	font-size:1.2em;
+	line-height:1.5em;
+}
+
+	
+}
+@media screen and (max-width:479px) {
+body {
+	font-size:1em;
+	line-height:1.618em;
+}
+h1 {
+	font-size:2em;
+	line-height:1.5em;
+}
+h2 {
+	font-size:1.5em;
+	line-height:1.5em;
+}
+h3 {
+	font-size:1.2em;
+	line-height:1.5em;
+}
+}
+
 
 /*=============add new style ================*/
 

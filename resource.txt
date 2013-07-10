@@ -1,0 +1,9 @@
+
+// example
+http://brutaldesign.github.io/swipebox/
+http://dimsemenov.com/plugins/magnific-popup/
+http://demo.siterepo.com/metrobox/demo.php
+http://www.codingjack.com/jackbox/jackbox.html#
+
+// tutorial
+http://coding.smashingmagazine.com/2013/05/02/truly-responsive-lightbox/

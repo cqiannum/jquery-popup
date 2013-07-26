@@ -1,5 +1,5 @@
-history plugin
-fix me
+// history plugin
+// fix me
 (function(undefined) {
 
     var hash = window.location.hash;

@@ -7,3 +7,8 @@ http://www.codingjack.com/jackbox/jackbox.html#
 
 // tutorial
 http://coding.smashingmagazine.com/2013/05/02/truly-responsive-lightbox/
+
+// todo
+video.js
+map.js
+gdoc.js

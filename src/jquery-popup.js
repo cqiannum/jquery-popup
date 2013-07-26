@@ -3,7 +3,7 @@
  * https://github.com/amazingSurge/popup
  *
  * Copyright (c) 2013 amazingSurge
- * Licensed under the CC, BY-NC licenses.
+ * Licensed under GPL licenses.
  */
 
 (function($, document, window, undefined) {

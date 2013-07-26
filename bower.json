@@ -1,7 +1,7 @@
 {
-  "name": "jquery-choice",
+  "name": "jquery-popup",
   "version": "0.1.1",
-  "main": "dist/jquery-choice.js",
+  "main": "dist/jquery-popup.js",
   "ignore": [
     "**/.*",
     "node_modules",

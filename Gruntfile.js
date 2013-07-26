@@ -17,7 +17,7 @@ module.exports = function(grunt) {
                 stripBanners: true
             },
             dist: {
-                src: ['src/jquery.popup.js', 'src/popup.keyboard.js', 'src/popup.slider.js', 'src/popup.thumb.js'],
+                src: ['src/jquery-popup.js', 'src/jquery-popup-keyboard.js', 'src/jquery-popup-slider.js', 'src/jquery-popup-thumb.js'],
                 dest: 'dist/jquery.<%= pkg.name %>.js'
             }
         },
@@ -103,6 +103,24 @@ module.exports = function(grunt) {
                     compile: true
                 }
             },
+        },
+        replace: {
+            bower: {
+                src: ['bower.json'],
+                overwrite: true, // overwrite matched source files
+                replacements: [{
+                    from: /("version": ")([0-9\.]+)(")/g,
+                    to: "$1<%= pkg.version %>$3"
+                }]
+            },
+            jquery: {
+                src: ['tabs.jquery.json'],
+                overwrite: true, // overwrite matched source files
+                replacements: [{
+                    from: /("version": ")([0-9\.]+)(")/g,
+                    to: "$1<%= pkg.version %>$3"
+                }]
+            },
         }
     });
 
@@ -115,6 +133,7 @@ module.exports = function(grunt) {
 
     grunt.loadNpmTasks('grunt-jsbeautifier');
     grunt.loadNpmTasks('grunt-recess');
+    grunt.loadNpmTasks('grunt-text-replace');
 
     grunt.loadNpmTasks('grunt-tagrelease');
     grunt.loadNpmTasks('grunt-bumpup');
@@ -122,9 +141,9 @@ module.exports = function(grunt) {
     // Default task.
     grunt.registerTask('default', ['jshint', 'jsbeautifier', 'clean', 'concat', 'uglify']);
 
-    grunt.registerTask('js', ['jsbeautifier', 'concat', 'uglify']);
+    grunt.registerTask('js', ['jsbeautifier']);
     grunt.registerTask('css', ['recess']);
-    grunt.registerTask('all', ['recess', 'jshint', 'jsbeautifier', 'concat', 'uglify']);
+    grunt.registerTask('dist', ['concat', 'uglify']);
 
     // Release alias task
     grunt.registerTask('release', function (type) {
@@ -134,4 +153,9 @@ module.exports = function(grunt) {
         grunt.task.run('bumpup:' + type); // Bump up the package version
         grunt.task.run('tagrelease');     // Commit & tag the changes from above
     });
+
+    grunt.registerTask('version', [
+        'replace:bower',
+        'replace:jquery'
+    ]);
 };

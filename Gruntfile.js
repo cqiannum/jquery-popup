@@ -18,7 +18,7 @@ module.exports = function(grunt) {
             },
             dist: {
                 src: ['src/jquery-popup.js', 'src/jquery-popup-keyboard.js', 'src/jquery-popup-slider.js', 'src/jquery-popup-thumb.js'],
-                dest: 'dist/jquery.<%= pkg.name %>.js'
+                dest: 'dist/<%= pkg.name %>.js'
             }
         },
         uglify: {
@@ -27,7 +27,7 @@ module.exports = function(grunt) {
             },
             dist: {
                 src: '<%= concat.dist.dest %>',
-                dest: 'dist/jquery.<%= pkg.name %>.min.js'
+                dest: 'dist/<%= pkg.name %>.min.js'
             },
         },
         jshint: {

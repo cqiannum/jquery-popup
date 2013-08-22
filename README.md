@@ -1,32 +1,209 @@
-# Popup
+# jQuery popup
 
-A jquery plugin that used to popup a lightbox in the web page.
+The powerful jQuery plugin that creates all kinds of pop up effect. <a href="http://amazingsurge.github.io/jquery-popup/">Project page and demos</a><br />
+Download: <a href="https://github.com/amazingSurge/jquery-popup/archive/master.zip">jquery-popup-master.zip</a>
 
-## Getting Started
-Download the [production version][min] or the [development version][max].
+***
 
-[min]: https://raw.github.com/amazingSurge/popup/master/dist/popup.min.js
-[max]: https://raw.github.com/amazingSurge/popup/master/dist/popup.js
+## Features
 
-In your web page:
+* **Keyboard control support** — use `left/right`key to switch pre/next image,`esc`to close
+* **AJAXed popup support** — ajax load content support
+* **Video and animation playback support** — popup provides the function of video and animation play
+* **Lightweight size** — 1 kb gzipped
 
+## Dependencies
+* <a href="http://jquery.com/" target="_blank">jQuery 1.83+</a>
+
+## Usage
+
+Import this libraries:
+* jQuery
+* jquery-popup.min.js
+
+And CSS:
+* popup.css and core.css 
+
+
+Create base html element:
 ```html
-<script src="jquery.js"></script>
-<script src="dist/popup.min.js"></script>
-<script>
-jQuery(function($) {
-  $.awesome(); // "awesome"
-});
-</script>
+	<div class="example">
+    	<a class="popup-image" href="img/1.jpg" data-popup-transition="fade" data-popup-title='this is a image'      data-popup-skin='skinRimless'>
+			<img src="img/1-thumbnail.jpg" alt="" />
+		</a>
+	</div>
 ```
-## UX
-http://37signals.com/svn/posts/1149-modal-overlays-beyond-the-dialog-box
 
-## Documentation
-_(Coming soon)_
+Initialize tabs:
+```javascript
+$(".popup-image").popup();
+```
 
-## Examples
-_(Coming soon)_
+Or initialize tabs with custom settings:
+```javascript
+$(".popup-image").popup({
+namespace: 'popup',
+	theme: 'default',
+    modalEffect: 'none',
+    winBtn: true,
+    keyboard: true,
+    autoSlide: false,
+    playSpeed: 1500,
+    preload: false,
+    thumbnail: false,
+});
+```
 
-## Release History
-_(Nothing yet)_
+the most important thing is you should set panes value to let plugin find his panes content
+
+
+
+
+## Settings
+
+```javascript
+{   
+
+	// Optional property, Set a namespace for css class
+	namespace: 'popup',
+	
+	//Optional property, set transition effect, it works after you load specified theme file
+    theme: 'default',
+
+	//Optional property, if 'none',we can close at once needn't to give time to render css3 transition
+    modalEffect: 'none',
+
+	//Optional property, if true and when the target elements has class<code>namespace + '-container'</code>, it's can be closed.
+    winBtn: true,
+
+	//Optional property, if true, the keyboard control is activated
+    keyboard: true,
+
+    //Optional property, if true, the images will auto slide
+    autoSlide: false,
+
+	//Optional property,  set the interval time between one image and anther
+    playSpeed: 1500,
+
+    //Optional property, if true, the next image will be loaded
+    preload: false,
+
+    //Optional property, set the parameters for ajax
+    ajax: {
+        render: function(data) {
+            return $(data);
+        },
+        options: {
+            dataType: 'html',
+            headers: {
+                 popup': true
+            }
+        }
+    },
+
+	//Optional property, set the parameters for swf
+    swf: {
+        allowscriptaccess: 'always',
+        allowfullscreen: 'true',
+        wmode: 'transparent',
+        },
+
+	//Optional property, set the parameters for html5
+    html5: {
+        width: "100%",
+        height: "100%",
+        preload: "load",
+        controls: "controls",
+        poster: '',
+        type: {
+            mp4: "video/mp4",
+            webm: "video/webm",
+            ogg: "video/ogg",
+        },
+        source: null
+    },
+
+    //Optional property, if true, the component of thumbnails can be activation
+    thumbnail: false,
+
+    //set the template
+    tpl: {
+        overlay: '<div class="popup-overlay"></div>',
+        container: '<div class="popup-wrap">' + '<div class="popup-container">' + '<div class="popup-content-wrap">' + '<div class="popup-content-holder">' + '<div class="popup-content">' + '</div>' + '<div class="popup-infoBar">' + '<div class="popup-title"></div>' + '<span class="popup-counter"></span>' + '</div>' + '</div>' + '</div>' + '</div>' + '</div>',
+        loading: '<div class="popup-loading">loading...</div>',
+        close: '<button title="Close" type="button" class="popup-close">x</button>',
+        next: '<button title="next" type="button" class="popup-navigate popup-next"></button>',
+        prev: '<button title="prev" type="button" class="popup-navigate popup-prev"></button>'
+    }
+}
+```
+
+## Public methods
+
+jquery tabs has different methods , we can use it as below :
+```javascript
+// active index
+$(".demo").tabs("active", index);
+
+// get all tabs element
+$(".demo").tabs("getTabs");
+
+// get all panes element
+$(".demo").tabs("getPanes");
+
+// get current index, start from 0
+$(".demo").tabs("getIndex");
+
+// get current pane element
+$(".demo").tabs("getCurrentPane");
+
+// get current tab elemnt
+$(".demo").tabs("getCurrentTab");
+
+// goto the next tab, the last will goto the first
+$(".demo").tabs("next");
+
+// goto the prevous tab, the first will goto the last
+$(".demo").tabs("prev");
+
+// remove tabs Dom element and unbound all events
+$(".demo").tabs("destroy");
+```
+
+## Event / Callback
+
+* <code>tabs::init</code>: trigger when tabs initilize
+* <code>tabs::active</code>: trigger when tabs is selected
+* <code>tabs::afterActive</code>:  trigger after acitve
+
+how to use event:
+```javascript
+$(document).on('tabs::init', function(event,instance) {
+    // instance means current tabs instance 
+    // some stuff
+});
+```
+
+## Browser support
+jquery-tabs is verified to work in Internet Explorer 7+, Firefox 2+, Opera 9+, Google Chrome and Safari browsers. Should also work in many others.
+
+Mobile browsers (like Opera mini, Chrome mobile, Safari mobile, Android browser and others) is coming soon.
+
+## Changes
+
+| Version | Notes                                                            |
+|---------|------------------------------------------------------------------|
+|   0.2.x | ([compare][compare-1.2]) add history function                    |
+|   0.1.x | ([compare][compare-1.1]) add keyboard function                   |
+|     ... | ...                                                              |
+
+[compare-1.2]: https://github.com/amazingSurge/jquery-tabs/compare/v1.2.0...v1.3.0
+[compare-1.1]: https://github.com/amazingSurge/jquery-tabs/compare/v1.1.0...v1.2.0
+
+## Author
+[amazingSurge](http://amazingSurge.com)
+
+## License
+jQuery-tabs plugin is released under the <a href="https://github.com/amazingSurge/jquery-tabs/blob/master/LICENCE.GPL" target="_blank">GPL licence</a>.
+
+

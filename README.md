@@ -28,7 +28,7 @@ And CSS:
 Create base html element:
 ```html
     <div class="example">
-        <a class="popup-image" href="img/1.jpg" data-popup-transition="fade" data-popup-title='this is a image'      data-popup-skin='skinRimless'>
+        <a class="popup-image" href="img/1.jpg" data-popup-transition="fade" data-popup-title='this is a image' data-popup-skin='skinRimless'>
             <img src="img/1-thumbnail.jpg" alt="" />
         </a>
     </div>

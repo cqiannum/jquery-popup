@@ -54,11 +54,6 @@ namespace: 'popup',
 });
 ```
 
-the most important thing is you should set panes value to let plugin find his panes content
-
-
-
-
 ## Settings
 
 ```javascript

@@ -27,11 +27,11 @@ And CSS:
 
 Create base html element:
 ```html
-	<div class="example">
-    	<a class="popup-image" href="img/1.jpg" data-popup-transition="fade" data-popup-title='this is a image'      data-popup-skin='skinRimless'>
-			<img src="img/1-thumbnail.jpg" alt="" />
-		</a>
-	</div>
+    <div class="example">
+        <a class="popup-image" href="img/1.jpg" data-popup-transition="fade" data-popup-title='this is a image'      data-popup-skin='skinRimless'>
+            <img src="img/1-thumbnail.jpg" alt="" />
+        </a>
+    </div>
 ```
 
 Initialize tabs:
@@ -43,7 +43,7 @@ Or initialize tabs with custom settings:
 ```javascript
 $(".popup-image").popup({
 namespace: 'popup',
-	theme: 'default',
+    theme: 'default',
     modalEffect: 'none',
     winBtn: true,
     keyboard: true,
@@ -64,25 +64,25 @@ the most important thing is you should set panes value to let plugin find his pa
 ```javascript
 {   
 
-	// Optional property, Set a namespace for css class
-	namespace: 'popup',
-	
-	//Optional property, set transition effect, it works after you load specified theme file
+    // Optional property, Set a namespace for css class
+    namespace: 'popup',
+    
+    //Optional property, set transition effect, it works after you load specified theme file
     theme: 'default',
 
-	//Optional property, if 'none',we can close at once needn't to give time to render css3 transition
+    //Optional property, if 'none',we can close at once needn't to give time to render css3 transition
     modalEffect: 'none',
 
-	//Optional property, if true and when the target elements has class<code>namespace + '-container'</code>, it's can be closed.
+    //Optional property, if true and when the target elements has class<code>namespace + '-container'</code>, it's can be closed.
     winBtn: true,
 
-	//Optional property, if true, the keyboard control is activated
+    //Optional property, if true, the keyboard control is activated
     keyboard: true,
 
     //Optional property, if true, the images will auto slide
     autoSlide: false,
 
-	//Optional property,  set the interval time between one image and anther
+    //Optional property,  set the interval time between one image and anther
     playSpeed: 1500,
 
     //Optional property, if true, the next image will be loaded
@@ -101,14 +101,14 @@ the most important thing is you should set panes value to let plugin find his pa
         }
     },
 
-	//Optional property, set the parameters for swf
+    //Optional property, set the parameters for swf
     swf: {
         allowscriptaccess: 'always',
         allowfullscreen: 'true',
         wmode: 'transparent',
         },
 
-	//Optional property, set the parameters for html5
+    //Optional property, set the parameters for html5
     html5: {
         width: "100%",
         height: "100%",
@@ -140,52 +140,44 @@ the most important thing is you should set panes value to let plugin find his pa
 
 ## Public methods
 
-jquery tabs has different methods , we can use it as below :
+jquery popup has different methods , we can use it as below :
 ```javascript
-// active index
-$(".demo").tabs("active", index);
+// start to activate
+$(".popup-image").popup("open");
 
-// get all tabs element
-$(".demo").tabs("getTabs");
+// loading the target element
+$(".popup-image").popup("goto");
 
-// get all panes element
-$(".demo").tabs("getPanes");
+// go to next
+$(".popup-image").popup("next");
 
-// get current index, start from 0
-$(".demo").tabs("getIndex");
+// go to prev
+$(".popup-image").popup("prev");
 
-// get current pane element
-$(".demo").tabs("getCurrentPane");
+// close the target element
+$("popup-image").popup("close");
 
-// get current tab elemnt
-$(".demo").tabs("getCurrentTab");
-
-// goto the next tab, the last will goto the first
-$(".demo").tabs("next");
-
-// goto the prevous tab, the first will goto the last
-$(".demo").tabs("prev");
-
-// remove tabs Dom element and unbound all events
-$(".demo").tabs("destroy");
 ```
 
 ## Event / Callback
 
-* <code>tabs::init</code>: trigger when tabs initilize
-* <code>tabs::active</code>: trigger when tabs is selected
-* <code>tabs::afterActive</code>:  trigger after acitve
+* <code>popup::init</code>: trigger when popup initilize
+* <code>popup::create</code>: trigger when the framework of popup is created
+* <code>popup::close</code>: trigger when popup is going to cloing
+* <code>popup::change</code>: trigger when popup is going to changing
+* <code>popup::resize</code>: trigger when the size of viewport is changed
+* <code>popup::preload</code>: trigger when popup need to preload
 
 how to use event:
 ```javascript
-$(document).on('tabs::init', function(event,instance) {
-    // instance means current tabs instance 
+$(document).on('popup::init', function(event,instance) {
+    // instance means current popup instance 
     // some stuff
 });
 ```
 
 ## Browser support
-jquery-tabs is verified to work in Internet Explorer 7+, Firefox 2+, Opera 9+, Google Chrome and Safari browsers. Should also work in many others.
+jquery-popup is verified to work in Internet Explorer 7+, Firefox 2+, Opera 9+, Google Chrome and Safari browsers. Should also work in many others.
 
 Mobile browsers (like Opera mini, Chrome mobile, Safari mobile, Android browser and others) is coming soon.
 
@@ -193,17 +185,19 @@ Mobile browsers (like Opera mini, Chrome mobile, Safari mobile, Android browser 
 
 | Version | Notes                                                            |
 |---------|------------------------------------------------------------------|
-|   0.2.x | ([compare][compare-1.2]) add history function                    |
+|   0.3.x | ([compare][compare-1.3]) add thumbnails function                    |
+|   0.2.x | ([compare][compare-1.2]) add autoside function                    |
 |   0.1.x | ([compare][compare-1.1]) add keyboard function                   |
 |     ... | ...                                                              |
 
-[compare-1.2]: https://github.com/amazingSurge/jquery-tabs/compare/v1.2.0...v1.3.0
-[compare-1.1]: https://github.com/amazingSurge/jquery-tabs/compare/v1.1.0...v1.2.0
+[compare-1.3]: https://github.com/amazingSurge/jquery-popup/compare/v1.3.0...v1.4.0
+[compare-1.2]: https://github.com/amazingSurge/jquery-popup/compare/v1.2.0...v1.3.0
+[compare-1.1]: https://github.com/amazingSurge/jquery-popup/compare/v1.1.0...v1.2.0
 
 ## Author
 [amazingSurge](http://amazingSurge.com)
 
 ## License
-jQuery-tabs plugin is released under the <a href="https://github.com/amazingSurge/jquery-tabs/blob/master/LICENCE.GPL" target="_blank">GPL licence</a>.
+jQuery-popup plugin is released under the <a href="https://github.com/amazingSurge/jquery-popup/blob/master/LICENCE.GPL" target="_blank">GPL licence</a>.
 
 

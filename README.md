@@ -91,7 +91,7 @@ namespace: 'popup',
         options: {
             dataType: 'html',
             headers: {
-                 popup': true
+                 popup: true
             }
         }
     },
